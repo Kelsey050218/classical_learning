@@ -153,7 +153,7 @@ classical_learning/
 
 ## 部署
 
-详细部署步骤请参考 [DEPLOY.md](./DEPLOY.md)，包含：
+详细部署步骤请参考 [DEPLOY.md](project/DEPLOY.md)，包含：
 - Ubuntu 服务器环境配置
 - MySQL / Nginx 安装
 - SSL 证书配置（Let's Encrypt）
