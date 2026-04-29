@@ -1,0 +1,116 @@
+<h2>工具嵌入策略 - 精简版</h2>
+<p class="subtitle">只在必要时跳转外部工具，右下角新增全局「伴读机器人」</p>
+
+<div class="mockup">
+  <div class="mockup-header">修正后的工具嵌入方案</div>
+  <div class="mockup-body" style="padding: 20px;">
+
+    <!-- 学习中心工具需求 -->
+    <h3 style="margin-bottom: 15px; color: #1a73e8;">📚 学习中心 - 工具需求</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+
+      <!-- 项目一 -->
+      <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; border: 2px solid #2196f3;">
+        <div style="font-weight: bold; color: #0d47a1; margin-bottom: 8px;">项目一：典籍时间轴 + 读书卡</div>
+        <ul style="font-size: 12px; padding-left: 15px; margin: 6px 0;">
+          <li>时间轴制作 → <strong style="color: #666;">无需工具，站内完成</strong></li>
+          <li>读书卡制作 → <strong style="color: #666;">无需工具，站内完成</strong></li>
+          <li style="color: #e53935;">❌ 不需要 ProcessON、可画跳转</li>
+        </ul>
+      </div>
+
+      <!-- 项目二 -->
+      <div style="background: #fff3e0; padding: 12px; border-radius: 8px; border: 2px solid #ff9800;">
+        <div style="font-weight: bold; color: #e65100; margin-bottom: 8px;">项目二：经典思想论坛</div>
+        <ul style="font-size: 12px; padding-left: 15px; margin: 6px 0;">
+          <li>辩论脚本创作 → <strong style="color: #4caf50;">✅ 豆包跳转</strong></li>
+          <li style="font-size: 11px; color: #666;">AI 协助生成辩论提纲和脚本</li>
+        </ul>
+      </div>
+
+      <!-- 项目三 -->
+      <div style="background: #f3e5f5; padding: 12px; border-radius: 8px; border: 2px solid #9c27b0;">
+        <div style="font-weight: bold; color: #6a1b9a; margin-bottom: 8px;">项目三：经典声演 + 典籍短片</div>
+        <ul style="font-size: 12px; padding-left: 15px; margin: 6px 0;">
+          <li>声演作品 → <strong style="color: #4caf50;">✅ 剪映跳转</strong></li>
+          <li>典籍短片 → <strong style="color: #4caf50;">✅ 剪映跳转</strong></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- 阅读专项 -->
+    <h3 style="margin-bottom: 15px; color: #2e7d32;">📖 阅读专项 - 纯站内功能</h3>
+
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; border: 2px solid #4caf50; margin-bottom: 20px;">
+      <div style="font-weight: bold; color: #1b5e20; margin-bottom: 10px;">🎯 零外部工具跳转</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+        <div>
+          <strong>核心功能（全部站内）：</strong>
+          <ul style="padding-left: 15px; margin: 5px 0;">
+            <li>原文阅读 + 智能注解</li>
+            <li>批注式阅读（4 种批注法）</li>
+            <li>阅读打卡日历</li>
+            <li>在线笔记</li>
+            <li>金句摘抄库</li>
+            <li>基础知识闯关（站内题库）</li>
+          </ul>
+        </div>
+        <div>
+          <strong>技术实现：</strong>
+          <ul style="padding-left: 15px; margin: 5px 0;">
+            <li>富文本批注编辑器</li>
+            <li>自动保存机制</li>
+            <li>题库系统</li>
+            <li>进度追踪</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 全局伴读机器人 -->
+    <div style="background: #fff8e1; padding: 15px; border-radius: 12px; border: 2px solid #ffc107;">
+      <div style="font-weight: bold; color: #ff6f00; margin-bottom: 10px;">🤖 全局功能：右下角「伴读机器人」</div>
+
+      <div style="display: flex; gap: 15px; align-items: flex-start;">
+
+        <!-- 悬浮按钮示意 -->
+        <div style="width: 200px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+          <div style="text-align: center; color: #666; font-size: 12px; margin-bottom: 10px;">悬浮按钮位置示意</div>
+          <div style="width: 100%; height: 150px; background: #f5f5f5; border-radius: 4px; position: relative;">
+            <div style="position: absolute; bottom: 10px; right: 10px; width: 50px; height: 50px; background: #2196f3; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">🤖</div>
+          </div>
+        </div>
+
+        <div style="flex: 1;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+            <div>
+              <strong>接入方式：</strong>
+              <ul style="padding-left: 15px; margin: 5px 0;">
+                <li>豆包 API / 跳转豆包</li>
+                <li>预设《经典常谈》专属 prompt</li>
+                <li>全页面右下角悬浮</li>
+              </ul>
+            </div>
+            <div>
+              <strong>核心能力：</strong>
+              <ul style="padding-left: 15px; margin: 5px 0;">
+                <li>解答典籍疑问</li>
+                <li>引导批注思路</li>
+                <li>协助创作脚本</li>
+                <li>随时 AI 伴读</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 13px; color: #555;">
+  <strong>工具策略总结：</strong>学习中心仅需 2 个外部工具（豆包 ×1、剪映 ×2），阅读专项零跳转。
+  右下角「伴读机器人」作为全局 AI 助手，随时响应学生问题，降低认知门槛。
+</p>

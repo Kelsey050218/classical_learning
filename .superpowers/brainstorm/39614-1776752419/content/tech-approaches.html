@@ -1,0 +1,142 @@
+<h2>技术方案对比 - 3 种架构方案</h2>
+<p class="subtitle">基于 React + FastAPI + MySQL + 阿里云 OSS 的技术栈</p>
+
+<div class="mockup">
+  <div class="mockup-header">方案 A：前后端分离 + RESTful API（推荐）</div>
+  <div class="mockup-body" style="padding: 20px;">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+
+      <!-- 前端 -->
+      <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+        <h4 style="color: #0d47a1;">🖥️ 前端（React）</h4>
+        <ul style="font-size: 12px; padding-left: 15px;">
+          <li><strong>框架：</strong>Vite + React + TypeScript</li>
+          <li><strong>路由：</strong>React Router v6</li>
+          <li><strong>状态管理：</strong>Zustand（轻量）</li>
+          <li><strong>UI 库：</strong>Ant Design / TailwindCSS</li>
+          <li><strong>HTTP：</strong>Axios + 拦截器（JWT 自动注入）</li>
+          <li><strong>富文本：</strong>TipTap / Slate（批注/笔记）</li>
+        </ul>
+      </div>
+
+      <!-- 后端 -->
+      <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+        <h4 style="color: #1b5e20;">⚙️ 后端（FastAPI）</h4>
+        <ul style="font-size: 12px; padding-left: 15px;">
+          <li><strong>框架：</strong>FastAPI + Uvicorn</li>
+          <li><strong>ORM：</strong>SQLAlchemy + Alembic</li>
+          <li><strong>认证：</strong>JWT (access + refresh token)</li>
+          <li><strong>存储：</strong>阿里云 OSS SDK</li>
+          <li><strong>密码加密：</strong>Bcrypt (passlib)</li>
+          <li><strong>部署：</strong>Gunicorn + Uvicorn workers</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- 架构图 -->
+    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+      <h4 style="color: #616161;">📐 数据流</h4>
+      <div style="font-size: 12px; text-align: center; margin-top: 10px;">
+
+        <div style="display: inline-block; background: #e3f2fd; padding: 8px 15px; border-radius: 6px; margin: 5px;">浏览器 (React SPA)</div>
+        <span style="color: #999; margin: 0 10px;">↔ HTTP/REST</span>
+        <div style="display: inline-block; background: #e8f5e9; padding: 8px 15px; border-radius: 6px; margin: 5px;">Nginx 反向代理 → FastAPI</div>
+        <span style="color: #999; margin: 0 10px;">↔ SQL</span>
+        <div style="display: inline-block; background: #fff3e0; padding: 8px 15px; border-radius: 6px; margin: 5px;">MySQL</div>
+
+        <div style="margin-top: 15px;">
+          <div style="display: inline-block; background: #e8f5e9; padding: 8px 15px; border-radius: 6px; margin: 5px;">FastAPI</div>
+          <span style="color: #999; margin: 0 10px;">↔ OSS SDK</span>
+          <div style="display: inline-block; background: #f3e5f5; padding: 8px 15px; border-radius: 6px; margin: 5px;">阿里云 OSS</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="margin-top: 15px; background: #fff8e1; padding: 10px; border-radius: 6px; font-size: 12px;">
+      <strong>✅ 优势：</strong>前后端独立开发、独立部署；React 生态丰富；FastAPI 性能好；RESTful 清晰
+      <br><strong>❌ 劣势：</strong>CORS 配置、JWT 管理需要额外代码
+      <br><strong>⏱ 预估工期：</strong>8-10 个工作日
+    </div>
+
+  </div>
+</div>
+
+<div class="mockup" style="margin-top: 15px;">
+  <div class="mockup-header">方案 B：Next.js + FastAPI（SSR 方案）</div>
+  <div class="mockup-body" style="padding: 20px;">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+
+      <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+        <h4 style="color: #0d47a1;">🖥️ 前端（Next.js）</h4>
+        <ul style="font-size: 12px; padding-left: 15px;">
+          <li><strong>框架：</strong>Next.js (App Router)</li>
+          <li><strong>渲染：</strong>SSR + SSG 混合</li>
+          <li><strong>状态：</strong>React Server Components</li>
+          <li><strong>优势：</strong>SEO 友好、首屏快</li>
+        </ul>
+      </div>
+
+      <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+        <h4 style="color: #1b5e20;">⚙️ 后端（FastAPI）</h4>
+        <ul style="font-size: 12px; padding-left: 15px;">
+          <li>与方案 A 相同</li>
+          <li>提供 RESTful API</li>
+          <li>JWT 认证</li>
+          <li>OSS 文件管理</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div style="margin-top: 15px; font-size: 12px;">
+      <strong>✅ 优势：</strong>首屏加载快、SEO 好
+      <br><strong>❌ 劣势：</strong>Next.js 学习曲线陡；交互组件需要 client 端 hydration；对伴学工具来说 SEO 不是刚需
+      <br><strong>⏱ 预估工期：</strong>10-12 个工作日
+    </div>
+
+  </div>
+</div>
+
+<div class="mockup" style="margin-top: 15px;">
+  <div class="mockup-header">方案 C：React + Django REST Framework</div>
+  <div class="mockup-body" style="padding: 20px;">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+
+      <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+        <h4 style="color: #0d47a1;">🖥️ 前端（React）</h4>
+        <ul style="font-size: 12px; padding-left: 15px;">
+          <li>与方案 A 相同</li>
+          <li>CSR 客户端渲染</li>
+        </ul>
+      </div>
+
+      <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+        <h4 style="color: #1b5e20;">⚙️ 后端（Django REST）</h4>
+        <ul style="font-size: 12px; padding-left: 15px;">
+          <li><strong>框架：</strong>Django REST Framework</li>
+          <li><strong>ORM：</strong>Django ORM</li>
+          <li><strong>优势：</strong>内置 Admin、内置认证</li>
+          <li><strong>劣势：</strong>重量级、启动慢</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div style="margin-top: 15px; font-size: 12px;">
+      <strong>✅ 优势：</strong>Django Admin 开箱即用（内容管理后台）、生态最成熟
+      <br><strong>❌ 劣势：</strong>Django 重量级、性能不如 FastAPI、异步支持弱
+      <br><strong>⏱ 预估工期：</strong>8-10 个工作日
+    </div>
+
+  </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 13px; color: #555;">
+  <strong>🏆 推荐：方案 A（React SPA + FastAPI）</strong>
+  <br>理由：你熟悉 React 和 FastAPI；CSR 对伴学工具足够；FastAPI 轻量高性能；10 天工期可控。
+</p>

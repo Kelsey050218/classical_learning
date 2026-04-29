@@ -1,0 +1,152 @@
+<h2>产品架构修正 - 用户系统与工具集成</h2>
+<p class="subtitle">新增注册登录系统，更新 Seedance/BGM/论坛设计</p>
+
+<div class="mockup">
+  <div class="mockup-header">核心变化</div>
+  <div class="mockup-body" style="padding: 20px;">
+
+    <!-- 用户系统 -->
+    <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; border: 3px solid #2196f3; margin-bottom: 20px;">
+      <h3 style="color: #0d47a1; margin-bottom: 12px;">🔐 用户系统（新增）</h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+
+        <div style="background: white; padding: 12px; border-radius: 8px;">
+          <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px;">注册/登录流程</div>
+          <ul style="font-size: 12px; padding-left: 15px; margin: 6px 0;">
+            <li>手机号 / 邮箱注册</li>
+            <li>密码登录</li>
+            <li>选填：姓名 + 班级</li>
+            <li>生成个人学习档案</li>
+          </ul>
+        </div>
+
+        <div style="background: white; padding: 12px; border-radius: 8px;">
+          <div style="font-weight: bold; color: #1976d2; margin-bottom: 8px;">登录后能力</div>
+          <ul style="font-size: 12px; padding-left: 15px; margin: 6px 0;">
+            <li>论坛评论/点赞/点踩</li>
+            <li>作品上传与保存</li>
+            <li>笔记/批注云端同步</li>
+            <li>个人素材库管理</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 论坛设计 -->
+    <div style="background: #fff3e0; padding: 15px; border-radius: 12px; border: 3px solid #ff9800; margin-bottom: 20px;">
+      <h3 style="color: #e65100; margin-bottom: 12px;">💬 经典思想论坛（知乎式）</h3>
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+
+        <div style="background: white; padding: 12px; border-radius: 8px;">
+          <div style="font-weight: bold; color: #e65100; margin-bottom: 8px;">论坛交互示意</div>
+          <div style="background: #f5f5f5; padding: 10px; border-radius: 6px; font-size: 11px;">
+
+            <!-- 话题区 -->
+            <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #ff9800;">
+              <div style="font-weight: bold; color: #333;">🔥 话题：孔子"仁"的思想在当代还有意义吗？</div>
+              <div style="color: #666; margin-top: 4px;">已收到 24 条回答 | 👍18 👎3</div>
+            </div>
+
+            <!-- 回答列表 -->
+            <div style="padding-left: 15px; border-left: 2px solid #ddd; margin-bottom: 6px;">
+              <div style="background: white; padding: 8px; border-radius: 4px;">
+                <div style="font-size: 10px; color: #999;">张三 · 八年级2班</div>
+                <div style="margin-top: 4px;">"仁"就是关心他人，现代社会更需要...</div>
+                <div style="margin-top: 4px; color: #666;">👍 12  👎 1</div>
+              </div>
+            </div>
+
+            <div style="padding-left: 15px; border-left: 2px solid #ddd;">
+              <div style="background: white; padding: 8px; border-radius: 4px;">
+                <div style="font-size: 10px; color: #999;">李四 · 八年级1班</div>
+                <div style="margin-top: 4px;">我觉得"仁"在古代更有适用性，因为...</div>
+                <div style="margin-top: 4px; color: #666;">👍 8  👎 5</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div style="background: white; padding: 12px; border-radius: 8px;">
+          <div style="font-weight: bold; color: #e65100; margin-bottom: 8px;">后台预设 3 个议题</div>
+          <ul style="font-size: 12px; padding-left: 15px; margin: 6px 0;">
+            <li>议题 1：仁的思想当代意义</li>
+            <li>议题 2：法家与儒家的优劣</li>
+            <li>议题 3：（可配置）</li>
+          </ul>
+          <div style="font-size: 11px; color: #666; margin-top: 10px;">
+            学生不可发起新话题，只能回答预设议题
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Seedance 集成 -->
+    <div style="background: #f3e5f5; padding: 15px; border-radius: 12px; border: 3px solid #9c27b0; margin-bottom: 20px;">
+      <h3 style="color: #6a1b9a; margin-bottom: 12px;">🎥 Seedance AI 视频生成集成</h3>
+
+      <div style="background: white; padding: 12px; border-radius: 8px;">
+        <div style="font-weight: bold; color: #9c27b0; margin-bottom: 10px;">使用流程</div>
+        <div style="display: flex; gap: 8px; align-items: center; font-size: 12px; flex-wrap: wrap;">
+
+          <div style="background: #e3f2fd; padding: 8px 12px; border-radius: 6px;">1. 豆包生成脚本</div>
+          <span style="color: #999;">→</span>
+          <div style="background: #fff3e0; padding: 8px 12px; border-radius: 6px;">2. 跳转 Seedance 登录</div>
+          <span style="color: #999;">→</span>
+          <div style="background: #f3e5f5; padding: 8px 12px; border-radius: 6px;">3. 脚本转短视频</div>
+          <span style="color: #999;">→</span>
+          <div style="background: #e8f5e9; padding: 8px 12px; border-radius: 6px;">4. 下载到本地</div>
+          <span style="color: #999;">→</span>
+          <div style="background: #fce4ec; padding: 8px 12px; border-radius: 6px;">5. 上传到素材库</div>
+
+        </div>
+
+        <div style="margin-top: 12px; padding: 10px; background: #fff8e1; border-radius: 6px; font-size: 11px;">
+          <strong>⚠️ 注意事项：</strong>
+          <ul style="padding-left: 15px; margin: 5px 0;">
+            <li>学生需自行注册 Seedance 账号（字节旗下）</li>
+            <li>我们的平台不做 Seedance 账号对接，仅做跳转引导</li>
+            <li>生成的是短视频片段，后续在剪映中拼接成长片</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- BGM 库 -->
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; border: 3px solid #4caf50;">
+      <h3 style="color: #1b5e20; margin-bottom: 12px;">🎵 BGM 库（站内提供）</h3>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 24px;">🎻</div>
+          <div style="font-size: 11px; font-weight: bold; margin-top: 5px;">古典纯音乐</div>
+          <div style="font-size: 10px; color: #666;">古琴、琵琶、笛子</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 24px;">🎹</div>
+          <div style="font-size: 11px; font-weight: bold; margin-top: 5px;">轻音乐</div>
+          <div style="font-size: 10px; color: #666;">钢琴、弦乐、氛围</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 24px;">🎼</div>
+          <div style="font-size: 11px; font-weight: bold; margin-top: 5px;">诗词配乐</div>
+          <div style="font-size: 10px; color: #666;">经典诗词朗诵专用</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px; font-size: 11px; color: #666;">
+        管理员后台可上传/删除 BGM，学生只能选择不能上传
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 13px; color: #555;">
+  <strong>核心变化：</strong>新增注册登录系统（手机号/邮箱）；论坛为后台预设 3 个议题的知乎式讨论区；
+  Seedance 仅跳转引导，不对接账号；BGM 库站内预置，管理员可管理。
+</p>
