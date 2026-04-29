@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Typography, Spin, Empty, Card as AntCard, Button, Input, Radio, message, Badge } from 'antd'
+import { Typography, Spin, Empty, Card as AntCard, Button, Input, Radio, message, Badge, Modal } from 'antd'
 import { MessageOutlined, LikeOutlined, DislikeOutlined, FireOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
+import EvaluationForm from '../../components/EvaluationForm'
 import { listTopics, listPosts, createPost, votePost } from '../../api/forum'
 import { completeSubProject } from '../../api/learning'
 
@@ -51,6 +52,29 @@ const Forum: React.FC = () => {
   const [newPostContent, setNewPostContent] = useState('')
   const [newPostStance, setNewPostStance] = useState('neutral')
   const [submitting, setSubmitting] = useState(false)
+  const [completed, setCompleted] = useState(false)
+  const [completing, setCompleting] = useState(false)
+  const [evalVisible, setEvalVisible] = useState(false)
+
+  const handleComplete = async () => {
+    setCompleting(true)
+    try {
+      await completeSubProject(4)
+      message.success('经典思想论坛学习已完成！')
+      setCompleted(true)
+      setEvalVisible(true)
+    } catch (err: any) {
+      if (err?.response?.status === 400) {
+        message.info('该项目已完成')
+        setCompleted(true)
+        setEvalVisible(true)
+      } else {
+        message.error('操作失败')
+      }
+    } finally {
+      setCompleting(false)
+    }
+  }
 
   useEffect(() => {
     fetchTopics()
@@ -130,12 +154,14 @@ const Forum: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto">
+      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(/images/backgrounds/learning.png)' }}
+        />
+        <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-zhusha rounded-lg mb-4">
-            <FireOutlined className="text-3xl text-white" />
-          </div>
           <Title level={2} className="font-display !mb-2">
             经典思想论坛
           </Title>
@@ -279,22 +305,28 @@ const Forum: React.FC = () => {
 
                   {/* Complete Sub-project */}
                   <div className="flex justify-center pt-6 border-t border-danmo-light">
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<CheckCircleOutlined />}
-                      onClick={async () => {
-                        try {
-                          await completeSubProject(4)
-                          message.success('经典思想论坛学习已完成！')
-                        } catch (err: any) {
-                          message.error(err.response?.data?.detail || '操作失败')
-                        }
-                      }}
-                      className="bg-zhusha hover:bg-zhusha-light"
-                    >
-                      完成经典思想论坛学习
-                    </Button>
+                    {completed ? (
+                      <div className="space-y-3 text-center">
+                        <div className="flex items-center justify-center gap-2 text-zhuqing">
+                          <CheckCircleOutlined />
+                          <Text className="text-zhuqing font-medium">已完成经典思想论坛学习</Text>
+                        </div>
+                        <Button type="default" onClick={() => navigate('/learning')}>
+                          返回学习中心
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<CheckCircleOutlined />}
+                        onClick={handleComplete}
+                        loading={completing}
+                        className="bg-zhusha hover:bg-zhusha-light"
+                      >
+                        完成经典思想论坛学习
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -304,6 +336,23 @@ const Forum: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
+      <Modal
+        title="项目评价量表"
+        open={evalVisible}
+        onCancel={() => setEvalVisible(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <EvaluationForm
+          subProjectId={4}
+          onSaved={() => {
+            setEvalVisible(false)
+            navigate('/learning')
+          }}
+        />
+      </Modal>
     </Layout>
   )
 }

@@ -15,7 +15,7 @@ const Card: React.FC<CardProps> = ({
   hover = true,
   onClick,
 }) => {
-  const baseStyles = 'bg-white rounded-lg p-6 transition-all duration-normal ease-out'
+  const baseStyles = 'bg-xuanzhi rounded-lg p-6 transition-all duration-normal ease-out'
 
   const variantStyles = {
     default: 'shadow-paper',

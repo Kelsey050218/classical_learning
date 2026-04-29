@@ -66,9 +66,6 @@ const Login: React.FC = () => {
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-card p-8 border border-danmo-light">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-zhusha rounded-lg mb-4 shadow-lg">
-              <span className="text-white font-display text-3xl font-bold">经</span>
-            </div>
             <Title level={2} className="font-display !mb-2 !text-mohei">
               经典常谈
             </Title>

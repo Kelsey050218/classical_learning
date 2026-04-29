@@ -1,0 +1,72 @@
+/* Mascot Character Styles */
+
+.mascot-character {
+  position: fixed;
+  z-index: 50;
+  width: 160px;
+  height: 160px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.mascot-character:active,
+.mascot-character.dragging {
+  cursor: grabbing;
+  opacity: 0.95;
+  transform: scale(1.1);
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.2));
+}
+
+.mascot-sprite {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-image: url('/images/mascot_sprite.png');
+  background-size: 2100% 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  overflow: hidden;
+}
+
+/* Tooltip on hover */
+.mascot-character:hover::after {
+  content: 'AI 学习助手';
+  position: absolute;
+  left: 170px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(26, 26, 26, 0.85);
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: tooltipFadeIn 0.2s ease-out 0.3s forwards;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .mascot-sprite.idle {
+    animation: none;
+  }
+
+  .mascot-character {
+    transition: none;
+  }
+}

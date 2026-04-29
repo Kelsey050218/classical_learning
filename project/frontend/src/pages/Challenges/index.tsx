@@ -91,9 +91,6 @@ const Challenges: React.FC = () => {
     <Layout>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-tenghuang rounded-lg mb-4">
-            <TrophyOutlined className="text-3xl text-white" />
-          </div>
           <Title level={2} className="font-display !mb-2">
             阅读闯关
           </Title>

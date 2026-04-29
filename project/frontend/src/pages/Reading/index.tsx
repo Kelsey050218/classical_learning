@@ -95,7 +95,7 @@ const CARD_TEMPLATES = [
   { id: 12, name: '总结反思卡', fields: ['本章收获', '仍需探究', '下一步计划'] },
 ]
 
-const PARAGRAPHS_PER_PAGE = 5
+const PARAGRAPHS_PER_PAGE = 2
 
 function splitParagraphs(content: string): ParagraphInfo[] {
   const paragraphs: ParagraphInfo[] = []
@@ -181,6 +181,10 @@ const Reading: React.FC = () => {
   const [annotations, setAnnotations] = useState<AnnotationItem[]>([])
   const [progressList, setProgressList] = useState<ReadingProgressItem[]>([])
   const [unlockStatus, setUnlockStatus] = useState<Record<number, boolean>>({})
+  const unlockStatusRef = useRef<Record<number, boolean>>({})
+  useEffect(() => {
+    unlockStatusRef.current = unlockStatus
+  }, [unlockStatus])
   const [selectedText, setSelectedText] = useState('')
   const [selectedRange, setSelectedRange] = useState<{ start: number; end: number } | null>(null)
   const [annotationType, setAnnotationType] = useState('knowledge')
@@ -495,7 +499,7 @@ const Reading: React.FC = () => {
   })
 
   const handleChapterChange = (chapterId: number) => {
-    if (!unlockStatus[chapterId] && chapterId !== currentChapterId) {
+    if (!unlockStatusRef.current[chapterId] && chapterId !== currentChapterId) {
       const ch = chapters.find(c => c.id === chapterId)
       const prev = chapters.find(c => c.sort_order === (ch?.sort_order || 1) - 1)
       message.warning(`需先完成《${prev?.title || '上一章'}》阅读并通关，才能解锁本章`)
@@ -536,8 +540,8 @@ const Reading: React.FC = () => {
           return
         }
 
-        const paragraphs = Array.from(container.querySelectorAll('p'))
-        const paraIndex = paragraphs.indexOf(startNode as HTMLParagraphElement)
+        const paraIndexAttr = (startNode as HTMLElement).getAttribute('data-paragraph-index')
+        const paraIndex = paraIndexAttr !== null ? parseInt(paraIndexAttr, 10) : Array.from(container.querySelectorAll('p')).indexOf(startNode as HTMLParagraphElement)
         const paraInfo = allParagraphs[paraIndex]
         if (!paraInfo) {
           setToolbarVisible(false)
@@ -678,15 +682,11 @@ const Reading: React.FC = () => {
     try {
       await saveProgress(0, true)
       message.success('本章已标记为读完')
-      const nextChapter = chapters.find(c => c.sort_order === (currentChapter?.sort_order || 1) + 1)
-      if (nextChapter) {
-        Modal.confirm({
-          title: '本章已读完',
-          content: `是否继续阅读下一篇《${nextChapter.title}》？`,
-          okText: '继续阅读',
-          cancelText: '留在本章',
-          onOk: () => handleChapterChange(nextChapter.id),
-        })
+      // Switch to quiz tab
+      setActiveTab('quiz')
+      const chapterQuiz = quizzes.find(q => q.chapter_id === currentChapterId)
+      if (chapterQuiz) {
+        handleStartQuiz(chapterQuiz)
       }
     } catch {
       message.error('标记失败')
@@ -714,11 +714,13 @@ const Reading: React.FC = () => {
     try {
       const res = await submitQuiz(currentQuiz.id, quizAnswers)
       setQuizResult(res.data)
-      if (res.data.is_passed) {
-        message.success(`恭喜通关！得分 ${res.data.score}/${res.data.max_score}`)
-        await fetchUnlockStatus()
-      } else {
-        message.info(`得分 ${res.data.score}/${res.data.max_score}，未通过，可再次挑战`)
+      message.success('答题完成，即将进入下一章')
+      await fetchUnlockStatus()
+      if (res.data.next_chapter_id) {
+        setTimeout(() => {
+          handleChapterChange(res.data.next_chapter_id!)
+          setActiveTab('reading')
+        }, 1500)
       }
     } catch (err) {
       message.error('提交失败')
@@ -986,10 +988,11 @@ const Reading: React.FC = () => {
     return marks.sort((a, b) => a.start - b.start)
   }
 
-  const renderParagraphWithMarks = (p: ParagraphInfo) => {
+  const renderParagraphWithMarks = (p: ParagraphInfo, paraIndex?: number) => {
     const marks = getMarksForParagraph(p)
+    const paraProps = paraIndex !== undefined ? { 'data-paragraph-index': paraIndex } : {}
     if (marks.length === 0) {
-      return <p className="mb-6">{p.text}</p>
+      return <p className="mb-6" {...paraProps}>{p.text}</p>
     }
 
     const spans: React.ReactNode[] = []
@@ -1047,7 +1050,7 @@ const Reading: React.FC = () => {
       spans.push(<span key="plain-end">{p.text.slice(lastEnd - p.globalStart)}</span>)
     }
 
-    return <p className="mb-6">{spans}</p>
+    return <p className="mb-6" {...paraProps}>{spans}</p>
   }
 
   const chapterListContent = (
@@ -1213,7 +1216,7 @@ const Reading: React.FC = () => {
             onMouseUp={handleTextSelection}
           >
             {currentPageParagraphs.map((p, idx) => (
-              <React.Fragment key={idx}>{renderParagraphWithMarks(p)}</React.Fragment>
+              <React.Fragment key={idx}>{renderParagraphWithMarks(p, pageIndex * PARAGRAPHS_PER_PAGE + idx)}</React.Fragment>
             ))}
           </div>
         </div>
@@ -1304,7 +1307,12 @@ const Reading: React.FC = () => {
 
   return (
     <Layout>
-      <div className="flex gap-6">
+      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(/images/backgrounds/reading.png)' }}
+        />
+        <div className="relative z-10 flex gap-6">
         {/* Main Reading Area */}
         <main className="flex-1 min-w-0">
           <Tabs
@@ -1444,9 +1452,9 @@ const Reading: React.FC = () => {
                           }`}
                           onMouseUp={handleTextSelection}
                         >
-                          {allParagraphs.map((p, index) => (
-                            <React.Fragment key={index}>
-                              {renderParagraphWithMarks(p)}
+                          {(pages[pageIndex] || []).map((p, idx) => (
+                            <React.Fragment key={idx}>
+                              {renderParagraphWithMarks(p, pageIndex * PARAGRAPHS_PER_PAGE + idx)}
                             </React.Fragment>
                           ))}
                         </div>
@@ -1510,48 +1518,100 @@ const Reading: React.FC = () => {
                     {!isCompleted ? (
                       <Empty description="请先读完本章，解锁闯关答题" />
                     ) : quizResult ? (
-                      <div className="space-y-4">
-                        <div className="text-center py-4">
-                          <Title level={4}>闯关结果</Title>
-                          <Text className={`text-2xl font-bold ${quizResult.is_passed ? 'text-zhuqing' : 'text-zhusha'}`}>
-                            {quizResult.score} / {quizResult.max_score} 分
-                          </Text>
-                          <Text className="text-danmo block mt-2">
-                            {quizResult.is_passed ? '恭喜通关！' : `未通过（需 ${quizResult.pass_score} 分）`}
-                          </Text>
-                          {quizResult.is_passed && (
-                            <Text className="text-shiqing block mt-2">下一章已解锁，今日打卡已完成！</Text>
-                          )}
+                      <div className="space-y-6 animate-fade-in-up">
+                        <div className="text-center py-6">
+                          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zhuqing-50 mb-4 animate-stamp-drop">
+                            <CheckCircleOutlined className="text-3xl text-zhuqing" />
+                          </div>
+                          <Title level={4} className="!mb-2">闯关完成</Title>
+                          <Text className="text-danmo block">下一章已解锁，今日打卡已完成</Text>
                         </div>
-                        <Button customVariant="primary" className="w-full" onClick={() => { setQuizResult(null); setCurrentQuiz(null); }}>
-                          重新挑战
+                        <Button
+                          customVariant="primary"
+                          className="w-full"
+                          onClick={() => {
+                            const next = chapters.find(c => c.sort_order === (currentChapter?.sort_order ?? 0) + 1)
+                            if (next) {
+                              handleChapterChange(next.id)
+                            }
+                            setQuizResult(null)
+                            setCurrentQuiz(null)
+                            setActiveTab('reading')
+                          }}
+                        >
+                          继续下一章阅读
                         </Button>
                       </div>
                     ) : currentQuiz ? (
-                      <div className="space-y-4">
-                        <Title level={5}>{currentQuiz.title}</Title>
-                        {quizQuestions.map((q, idx) => (
-                          <div key={q.id} className="p-4 bg-xuanzhi-warm rounded-lg">
-                            <Text className="font-medium block mb-3">{idx + 1}. {q.content}</Text>
-                            {q.question_type === 'choice' && q.options ? (
-                              <Radio.Group
-                                className="flex flex-col gap-2"
-                                value={quizAnswers[q.id]}
-                                onChange={e => setQuizAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                              >
-                                {q.options.map((opt: string) => (
-                                  <Radio key={opt} value={opt}>{opt}</Radio>
-                                ))}
-                              </Radio.Group>
-                            ) : (
-                              <Input
-                                placeholder="请输入答案..."
-                                value={quizAnswers[q.id] || ''}
-                                onChange={e => setQuizAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                              />
-                            )}
-                          </div>
-                        ))}
+                      <div className="space-y-5">
+                        <div className="flex items-center justify-between">
+                          <Title level={5} className="!mb-0">{currentQuiz.title}</Title>
+                          <Text className="text-xs text-danmo">
+                            已答 {Object.keys(quizAnswers).length} / {quizQuestions.length} 题
+                          </Text>
+                        </div>
+                        <div className="w-full h-1.5 bg-xuanzhi-dark rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-shiqing rounded-full transition-all duration-500"
+                            style={{ width: `${(Object.keys(quizAnswers).length / quizQuestions.length) * 100}%` }}
+                          />
+                        </div>
+                        {quizQuestions.map((q, idx) => {
+                          const typeLabel =
+                            q.question_type === 'choice'
+                              ? { text: '选择题', color: 'shiqing' }
+                              : q.question_type === 'fill'
+                                ? { text: '填空题', color: 'tenghuang' }
+                                : { text: '简答题', color: 'zhuqing' }
+                          return (
+                            <div
+                              key={q.id}
+                              className="p-5 bg-white rounded-xl border border-danmo-light shadow-paper transition-shadow hover:shadow-card-hover"
+                            >
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-mohei text-white text-xs font-bold">
+                                  {idx + 1}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs font-medium border bg-${typeLabel.color}-50 text-${typeLabel.color} border-${typeLabel.color}`}
+                                >
+                                  {typeLabel.text}
+                                </span>
+                              </div>
+                              <Text className="font-medium text-mohei block mb-4 leading-relaxed">{q.content}</Text>
+                              {q.question_type === 'choice' && q.options ? (
+                                <div className="flex flex-col gap-2">
+                                  {q.options.map((opt: string) => {
+                                    const selected = quizAnswers[q.id] === opt
+                                    return (
+                                      <div
+                                        key={opt}
+                                        onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                          selected
+                                            ? 'border-shiqing bg-shiqing-50'
+                                            : 'border-danmo-light hover:border-shiqing hover:bg-shiqing-50'
+                                        }`}
+                                      >
+                                        <Text className={selected ? 'text-shiqing font-medium' : 'text-mohei'}>
+                                          {opt}
+                                        </Text>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              ) : (
+                                <TextArea
+                                  placeholder={q.question_type === 'fill' ? '请填写答案...' : '请简述你的回答...'}
+                                  rows={q.question_type === 'fill' ? 2 : 4}
+                                  value={quizAnswers[q.id] || ''}
+                                  onChange={e => setQuizAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                  className="!bg-xuanzhi !border-danmo-light focus:!border-shiqing hover:!border-shiqing"
+                                />
+                              )}
+                            </div>
+                          )
+                        })}
                         <Button
                           customVariant="primary"
                           className="w-full"
@@ -1563,31 +1623,49 @@ const Reading: React.FC = () => {
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <Text className="text-danmo block mb-2">本章闯关</Text>
+                      <div className="space-y-4">
+                        <Text className="text-danmo block">本章闯关</Text>
                         {quizzes.filter(q => q.chapter_id === currentChapterId).length === 0 ? (
                           <Empty description="本章暂无闯关题目" />
                         ) : (
                           quizzes
                             .filter(q => q.chapter_id === currentChapterId)
                             .map(quiz => (
-                              <div key={quiz.id} className="flex items-center justify-between p-3 bg-xuanzhi-warm rounded-lg">
-                                <div>
-                                  <Text className="font-medium">{quiz.title}</Text>
-                                  <Text className="text-xs text-danmo">
-                                    {quiz.is_passed
-                                      ? `已通过 (${quiz.best_score}分)`
-                                      : quiz.is_attempted
-                                      ? '已挑战，未通过'
-                                      : '未开始'}
-                                  </Text>
+                              <div
+                                key={quiz.id}
+                                className="flex items-center gap-4 p-4 bg-white rounded-xl border border-danmo-light shadow-paper"
+                              >
+                                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-shiqing-50 flex items-center justify-center">
+                                  <EditOutlined className="text-xl text-shiqing" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <Text className="font-medium text-mohei block truncate">{quiz.title}</Text>
+                                  <div className="mt-1">
+                                    {quiz.is_attempted ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zhuqing-50 text-zhuqing border border-zhuqing">
+                                        <CheckCircleOutlined className="mr-1" />
+                                        已完成
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-tenghuang-50 text-tenghuang border border-tenghuang">
+                                        未开始
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                                 <Button
-                                  customVariant={quiz.is_passed ? 'ghost' : 'primary'}
+                                  customVariant={quiz.is_attempted ? 'ghost' : 'primary'}
                                   customSize="sm"
-                                  onClick={() => handleStartQuiz(quiz)}
+                                  onClick={() => {
+                                    if (quiz.is_attempted) {
+                                      const next = chapters.find(c => c.sort_order === (currentChapter?.sort_order ?? 0) + 1)
+                                      if (next) handleChapterChange(next.id)
+                                    } else {
+                                      handleStartQuiz(quiz)
+                                    }
+                                  }}
                                 >
-                                  {quiz.is_passed ? '重新挑战' : '开始闯关'}
+                                  {quiz.is_attempted ? '继续下一章阅读' : '开始闯关'}
                                 </Button>
                               </div>
                             ))
@@ -1867,6 +1945,7 @@ const Reading: React.FC = () => {
 
         {/* Reading Mode Overlay */}
         <ReadingModeOverlay />
+      </div>
       </div>
     </Layout>
   )

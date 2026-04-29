@@ -82,109 +82,72 @@ def submit_quiz(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Submit quiz answers and auto-grade."""
+    """Submit quiz answers and unlock next chapter."""
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
 
-    questions = db.query(Question).filter(Question.quiz_id == quiz_id).all()
-    question_map = {q.id: q for q in questions}
-
-    total_score = 0
-    max_score = 0
-    results = []
-
-    for q in questions:
-        max_score += q.score
-        user_answer = answers.get(str(q.id), "")
-        is_correct = False
-
-        if q.question_type == "choice":
-            is_correct = user_answer == q.answer
-        elif q.question_type == "fill":
-            is_correct = user_answer.strip().lower() == q.answer.strip().lower() if q.answer else False
-        else:
-            # Short answer - give full score if not empty (manual review later)
-            is_correct = bool(user_answer.strip())
-
-        if is_correct:
-            total_score += q.score
-
-        results.append({
-            "question_id": q.id,
-            "is_correct": is_correct,
-            "correct_answer": q.answer,
-            "explanation": q.explanation,
-        })
-
-    is_passed = total_score >= quiz.pass_score
-
-    # Save attempt
+    # Save attempt (no scoring)
     attempt = QuizAttempt(
         user_id=current_user.id,
         quiz_id=quiz_id,
         answers=answers,
-        score=total_score,
-        is_passed=is_passed
+        score=0,
+        is_passed=True
     )
     db.add(attempt)
 
-    # If passed, unlock next chapter and auto checkin
-    if is_passed:
-        # Unlock next chapter
-        current_chapter = db.query(Chapter).filter(Chapter.id == quiz.chapter_id).first()
-        if current_chapter:
-            next_chapter = db.query(Chapter).filter(
-                Chapter.sort_order == current_chapter.sort_order + 1
-            ).first()
-            if next_chapter:
-                next_progress = db.query(ReadingProgress).filter(
-                    ReadingProgress.user_id == current_user.id,
-                    ReadingProgress.chapter_id == next_chapter.id
-                ).first()
-                if next_progress:
-                    next_progress.is_unlocked = True
-                else:
-                    next_progress = ReadingProgress(
-                        user_id=current_user.id,
-                        chapter_id=next_chapter.id,
-                        current_position=0,
-                        is_completed=False,
-                        is_unlocked=True,
-                        last_read_at=None
-                    )
-                    db.add(next_progress)
-
-        # Auto checkin (silent if already checked in)
-        today = date.today()
-        existing_checkin = db.query(CheckIn).filter(
-            CheckIn.user_id == current_user.id,
-            CheckIn.checkin_date == today
+    # Unlock next chapter
+    current_chapter = db.query(Chapter).filter(Chapter.id == quiz.chapter_id).first()
+    if current_chapter:
+        next_chapter = db.query(Chapter).filter(
+            Chapter.sort_order == current_chapter.sort_order + 1
         ).first()
-        if not existing_checkin:
-            yesterday = today - timedelta(days=1)
-            yesterday_checkin = db.query(CheckIn).filter(
-                CheckIn.user_id == current_user.id,
-                CheckIn.checkin_date == yesterday
+        if next_chapter:
+            next_progress = db.query(ReadingProgress).filter(
+                ReadingProgress.user_id == current_user.id,
+                ReadingProgress.chapter_id == next_chapter.id
             ).first()
-            consecutive_days = 1
-            if yesterday_checkin:
-                consecutive_days = yesterday_checkin.consecutive_days + 1
-            checkin_record = CheckIn(
-                user_id=current_user.id,
-                checkin_date=today,
-                consecutive_days=consecutive_days,
-                content=f"完成《{current_chapter.title if current_chapter else '本章'}》闯关"
-            )
-            db.add(checkin_record)
+            if next_progress:
+                next_progress.is_unlocked = True
+            else:
+                next_progress = ReadingProgress(
+                    user_id=current_user.id,
+                    chapter_id=next_chapter.id,
+                    current_position=0,
+                    is_completed=False,
+                    is_unlocked=True,
+                    last_read_at=None
+                )
+                db.add(next_progress)
+
+    # Auto checkin (silent if already checked in)
+    today = date.today()
+    existing_checkin = db.query(CheckIn).filter(
+        CheckIn.user_id == current_user.id,
+        CheckIn.checkin_date == today
+    ).first()
+    if not existing_checkin:
+        yesterday = today - timedelta(days=1)
+        yesterday_checkin = db.query(CheckIn).filter(
+            CheckIn.user_id == current_user.id,
+            CheckIn.checkin_date == yesterday
+        ).first()
+        consecutive_days = 1
+        if yesterday_checkin:
+            consecutive_days = yesterday_checkin.consecutive_days + 1
+        checkin_record = CheckIn(
+            user_id=current_user.id,
+            checkin_date=today,
+            consecutive_days=consecutive_days,
+            content=f"完成《{current_chapter.title if current_chapter else '本章'}》闯关"
+        )
+        db.add(checkin_record)
 
     db.commit()
 
     return {
         "quiz_id": quiz_id,
-        "score": total_score,
-        "max_score": max_score,
-        "is_passed": is_passed,
-        "pass_score": quiz.pass_score,
-        "results": results,
+        "is_passed": True,
+        "next_chapter_id": next_chapter.id if current_chapter and next_chapter else None,
     }

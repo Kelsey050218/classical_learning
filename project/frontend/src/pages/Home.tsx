@@ -13,6 +13,7 @@ import Layout from '../components/Layout'
 import Card from '../components/UI/Card'
 import Progress from '../components/UI/Progress'
 import Badge from '../components/UI/Badge'
+import Carousel from '../components/Carousel'
 import apiClient from '../api/client'
 import { useAuthStore } from '../stores/auth'
 import { getTodayStudyTime } from '../api/studyTime'
@@ -158,7 +159,15 @@ const Home: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 stagger-children">
+      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(/images/backgrounds/home.png)' }}
+        />
+        <div className="relative z-10 space-y-6 stagger-children">
+        {/* Carousel */}
+        <Carousel />
+
         {/* Welcome section */}
         <Card variant="paper" className="relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-zhusha-100 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 blur-2xl" />
@@ -286,6 +295,7 @@ const Home: React.FC = () => {
             )}
           </div>
         </Card>
+        </div>
       </div>
     </Layout>
   )

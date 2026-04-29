@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { Typography, Input, Select, Button, message, Card as AntCard, List, Tag, Popconfirm } from 'antd'
-import { VideoCameraOutlined, SaveOutlined, CloudUploadOutlined, DeleteOutlined, PlayCircleOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
+import { Typography, Input, Select, Button, message, Card as AntCard, List, Tag, Popconfirm, Modal } from 'antd'
+import { VideoCameraOutlined, SaveOutlined, CloudUploadOutlined, DeleteOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
+import EvaluationForm from '../../components/EvaluationForm'
 import { createWork, listMyWorks, deleteWork, publishWork, Work, WorkCreate } from '../../api/works'
 import { listChapters, Chapter } from '../../api/chapters'
+import { completeSubProject } from '../../api/learning'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
 const { Option } = Select
 
 const VideoEdit: React.FC = () => {
+  const navigate = useNavigate()
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [myWorks, setMyWorks] = useState<Work[]>([])
   const [title, setTitle] = useState('')
@@ -18,6 +22,29 @@ const VideoEdit: React.FC = () => {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [completed, setCompleted] = useState(false)
+  const [completing, setCompleting] = useState(false)
+  const [evalVisible, setEvalVisible] = useState(false)
+
+  const handleComplete = async () => {
+    setCompleting(true)
+    try {
+      await completeSubProject(9)
+      message.success('典籍长视频剪辑学习已完成！')
+      setCompleted(true)
+      setEvalVisible(true)
+    } catch (err: any) {
+      if (err?.response?.status === 400) {
+        message.info('该项目已完成')
+        setCompleted(true)
+        setEvalVisible(true)
+      } else {
+        message.error('操作失败')
+      }
+    } finally {
+      setCompleting(false)
+    }
+  }
 
   useEffect(() => {
     fetchChapters()
@@ -103,12 +130,14 @@ const VideoEdit: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto">
+      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(/images/backgrounds/learning.png)' }}
+        />
+        <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-zhusha rounded-lg mb-4">
-            <VideoCameraOutlined className="text-3xl text-white" />
-          </div>
           <Title level={2} className="font-display !mb-2">
             典籍长视频剪辑
           </Title>
@@ -248,7 +277,51 @@ const VideoEdit: React.FC = () => {
             )}
           </AntCard>
         </div>
+
+        {/* Complete Sub-project */}
+        <div className="flex justify-center pt-6 border-t border-danmo-light mt-6">
+          {completed ? (
+            <div className="space-y-3 text-center">
+              <div className="flex items-center justify-center gap-2 text-zhuqing">
+                <CheckCircleOutlined />
+                <Text className="text-zhuqing font-medium">已完成典籍长视频剪辑学习</Text>
+              </div>
+              <Button type="default" onClick={() => navigate('/learning')}>
+                返回学习中心
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="primary"
+              size="large"
+              icon={<CheckCircleOutlined />}
+              onClick={handleComplete}
+              loading={completing}
+              className="bg-zhusha hover:bg-zhusha-light"
+            >
+              完成典籍长视频剪辑学习
+            </Button>
+          )}
+        </div>
       </div>
+    </div>
+
+      <Modal
+        title="项目评价量表"
+        open={evalVisible}
+        onCancel={() => setEvalVisible(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <EvaluationForm
+          subProjectId={9}
+          onSaved={() => {
+            setEvalVisible(false)
+            navigate('/learning')
+          }}
+        />
+      </Modal>
     </Layout>
   )
 }

@@ -75,9 +75,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick: _onMenuClick }) => {
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => navigate('/')}
             >
-              <div className="w-10 h-10 bg-zhusha rounded flex items-center justify-center">
-                <span className="text-white font-display text-xl font-bold">经</span>
-              </div>
+              <img
+                src="/logo-avatar.jpg"
+                alt="经典常谈"
+                className="w-10 h-10 rounded object-cover"
+              />
               <span className="font-display text-xl font-semibold text-mohei">
                 经典常谈
               </span>

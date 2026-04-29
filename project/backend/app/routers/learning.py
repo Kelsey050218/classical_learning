@@ -50,7 +50,6 @@ PROJECTS = [
         "sub_projects": [
             {"id": 8, "slug": "audio", "name": "经典声演", "path": "/audio-perf"},
             {"id": 9, "slug": "video", "name": "典籍长视频剪辑", "path": "/video-edit"},
-            {"id": 10, "slug": "capcut", "name": "剪映创作", "path": "https://www.capcut.cn", "is_external": True},
         ],
         "unlock_condition": {"project_id": 2, "status": "completed"},
     },

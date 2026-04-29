@@ -44,8 +44,8 @@ def update_reading_progress(
     ).first()
 
     if not progress:
-        # Chapter 1 is unlocked by default
-        is_unlocked = chapter.sort_order == 1
+        # First chapter default unlocked
+        is_unlocked = chapter.sort_order == 0
         progress = ReadingProgress(
             user_id=current_user.id,
             chapter_id=chapter_id,
@@ -84,8 +84,8 @@ def get_unlock_status(
     result = []
     for chapter in chapters:
         progress = progress_map.get(chapter.id)
-        # Chapter 1 is always unlocked by default
-        is_unlocked = (progress.is_unlocked if progress else False) or chapter.sort_order == 1
+        # First chapter always unlocked by default
+        is_unlocked = (progress.is_unlocked if progress else False) or chapter.sort_order == 0
         result.append({
             "chapter_id": chapter.id,
             "sort_order": chapter.sort_order,

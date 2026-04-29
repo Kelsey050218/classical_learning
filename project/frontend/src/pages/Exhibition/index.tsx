@@ -180,12 +180,14 @@ const Exhibition: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
+      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(/images/backgrounds/exhibition.png)' }}
+        />
+        <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-tenghuang rounded-lg mb-4">
-            <TrophyOutlined className="text-3xl text-white" />
-          </div>
           <Title level={2} className="font-display !mb-2">
             成果展厅
           </Title>
@@ -320,6 +322,7 @@ const Exhibition: React.FC = () => {
             </div>
           ) : null}
         </Modal>
+      </div>
       </div>
     </Layout>
   )

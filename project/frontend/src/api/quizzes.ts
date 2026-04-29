@@ -28,6 +28,7 @@ export interface QuizResult {
   max_score: number
   is_passed: boolean
   pass_score: number
+  next_chapter_id?: number
   results: {
     question_id: number
     is_correct: boolean

@@ -14,12 +14,11 @@ import {
   FileTextOutlined,
   AudioOutlined,
   MessageOutlined,
-  EditOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
 import EvaluationForm from '../../components/EvaluationForm'
-import { getLearningProjects, completeProject, LearningProject } from '../../api/learning'
+import { getLearningProjects, LearningProject } from '../../api/learning'
 
 const { Title, Text } = Typography
 
@@ -51,7 +50,6 @@ const Learning: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [evalModalVisible, setEvalModalVisible] = useState(false)
   const [evalProjectId, setEvalProjectId] = useState<number | null>(null)
-  const [completingProject, setCompletingProject] = useState<number | null>(null)
 
   useEffect(() => {
     fetchProjects()
@@ -66,20 +64,6 @@ const Learning: React.FC = () => {
       message.error('加载学习项目失败')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleCompleteProject = async (projectId: number) => {
-    setCompletingProject(projectId)
-    try {
-      await completeProject(projectId)
-      message.success('项目已完成！')
-      setEvalProjectId(projectId)
-      setEvalModalVisible(true)
-    } catch (error) {
-      message.error('操作失败')
-    } finally {
-      setCompletingProject(null)
     }
   }
 
@@ -107,7 +91,12 @@ const Learning: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto">
+      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(/images/backgrounds/learning.png)' }}
+        />
+        <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
           <Title level={2} className="font-display !mb-2">
@@ -121,131 +110,158 @@ const Learning: React.FC = () => {
         {projects.length === 0 ? (
           <Empty description="暂无学习项目" />
         ) : (
-          <div className="space-y-8">
-            {projects.map((project, index) => {
-              const status = statusConfig[project.status]
-              const isLocked = project.status === 'locked'
+          <div className="relative max-w-4xl mx-auto">
+            {/* Timeline vertical line */}
+            <div className="absolute left-[27px] top-6 bottom-6 w-0.5 bg-danmo-light" />
 
-              return (
-                <Card
-                  key={project.id}
-                  variant={project.status === 'locked' ? 'locked' : project.status === 'completed' ? 'completed' : 'default'}
-                  className={`overflow-hidden ${isLocked ? 'opacity-75' : ''}`}
-                >
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {/* Left: Project Info */}
-                    <div className="flex-1">
-                      <div className="flex items-start gap-4 mb-4">
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${
-                          isLocked
-                            ? 'bg-gray-100 text-danmo'
-                            : project.status === 'completed'
-                            ? 'bg-zhuqing-50 text-zhuqing'
-                            : 'bg-zhusha-50 text-zhusha'
-                        }`}>
-                          {projectIcons[project.icon] || <BookOutlined />}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Tag color={isLocked ? 'default' : project.status === 'completed' ? 'success' : 'error'}>
-                              <span className="flex items-center gap-1">
-                                {status.icon}
-                                {status.label}
-                              </span>
-                            </Tag>
-                            <Text className="text-danmo text-xs">
-                              项目 {index + 1}
-                            </Text>
-                          </div>
-                          <Title level={4} className="font-display !mb-1">
-                            {project.name}
-                          </Title>
-                          <Text className="text-danmo text-sm block">
-                            {project.description}
-                          </Text>
-                        </div>
+            <div className="space-y-0">
+              {projects.map((project, index) => {
+                const status = statusConfig[project.status]
+                const isLocked = project.status === 'locked'
+                const isLast = index === projects.length - 1
+
+                return (
+                  <div key={project.id} className="relative flex gap-5 pb-10 last:pb-0">
+                    {/* Timeline node */}
+                    <div className="relative z-10 flex flex-col items-center flex-shrink-0 w-14">
+                      <div className={`
+                        rounded-full flex items-center justify-center transition-all
+                        ${project.status === 'completed'
+                          ? 'w-8 h-8 bg-zhuqing text-white shadow-lg shadow-zhuqing/30'
+                          : project.status === 'in_progress'
+                          ? 'w-9 h-9 bg-zhusha text-white shadow-lg shadow-zhusha/30 ring-4 ring-zhusha-100'
+                          : 'w-8 h-8 border-2 border-danmo bg-xuanzhi text-danmo'
+                        }
+                      `}>
+                        {project.status === 'completed' ? (
+                          <CheckCircleOutlined className="text-sm" />
+                        ) : project.status === 'in_progress' ? (
+                          <UnlockOutlined className="text-sm" />
+                        ) : (
+                          <LockOutlined className="text-xs" />
+                        )}
                       </div>
-
-                      {/* Progress */}
-                      {!isLocked && (
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between mb-1">
-                            <Text className="text-sm text-danmo">完成进度</Text>
-                            <Text className="text-sm font-medium text-mohei">
-                              {project.completed_count}/{project.total_count}
-                            </Text>
-                          </div>
-                          <AntProgress
-                            percent={project.progress}
-                            strokeColor={project.status === 'completed' ? '#5A9A6E' : '#C73E3A'}
-                            trailColor="#F5F2EB"
-                            size="small"
-                            showInfo={false}
-                          />
-                          {project.completed_count === project.total_count && (
-                            <button
-                              onClick={() => handleCompleteProject(project.id)}
-                              disabled={completingProject === project.id}
-                              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-zhusha hover:bg-zhusha-light text-white rounded-lg transition-colors text-sm font-medium"
-                            >
-                              <EditOutlined />
-                              {completingProject === project.id ? '处理中...' : '完成项目并填写量表'}
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Unlock condition */}
-                      {isLocked && project.unlock_condition && (
-                        <div className="p-3 bg-xuanzhi-warm rounded-lg mb-4">
-                          <Text className="text-sm text-danmo">
-                            解锁条件：完成「{projects.find(p => p.id === project.unlock_condition?.project_id)?.name || '前置项目'}」
-                          </Text>
-                        </div>
+                      {!isLast && (
+                        <div className={`w-0.5 flex-1 mt-2 ${
+                          project.status === 'completed' ? 'bg-zhuqing' : 'bg-danmo-light'
+                        }`} />
                       )}
                     </div>
 
-                    {/* Right: Sub-projects */}
-                    <div className="md:w-72 flex-shrink-0">
-                      <Text className="text-xs text-danmo font-medium mb-3 block">
-                        包含子项目
-                      </Text>
-                      <div className="space-y-2">
-                        {project.sub_projects.map((sp) => (
-                          <button
-                            key={sp.id}
-                            onClick={() => handleNavigate(sp.path, sp.status)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
-                              sp.status === 'locked'
-                                ? 'bg-gray-50 text-danmo cursor-not-allowed'
-                                : sp.status === 'completed'
-                                ? 'bg-zhuqing-50 text-zhuqing hover:bg-zhuqing-100'
-                                : 'bg-xuanzhi-warm text-mohei hover:bg-zhusha-50 hover:text-zhusha'
-                            }`}
-                          >
-                            <span className="text-lg">
-                              {subProjectIcons[sp.slug] || <ArrowRightOutlined />}
-                            </span>
-                            <span className="text-sm flex-1">{sp.name}</span>
-                            {sp.status === 'completed' && (
-                              <CheckCircleOutlined className="text-zhuqing" />
-                            )}
-                            {sp.status === 'locked' && (
-                              <LockOutlined className="text-danmo text-xs" />
-                            )}
-                            {sp.status === 'in_progress' && (
-                              <ArrowRightOutlined className="text-zhusha text-xs" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                    {/* Project Card */}
+                    <div className="flex-1 min-w-0 -mt-2">
+                      <Card
+                        variant={project.status === 'locked' ? 'locked' : project.status === 'completed' ? 'completed' : 'default'}
+                        className={`${isLocked ? 'opacity-75' : ''}`}
+                      >
+                        {/* Header */}
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                            isLocked
+                              ? 'bg-gray-100 text-danmo'
+                              : project.status === 'completed'
+                              ? 'bg-zhuqing-50 text-zhuqing'
+                              : 'bg-zhusha-50 text-zhusha'
+                          }`}>
+                            {projectIcons[project.icon] || <BookOutlined />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <Tag color={isLocked ? 'default' : project.status === 'completed' ? 'success' : 'error'}>
+                                <span className="flex items-center gap-1">
+                                  {status.icon}
+                                  {status.label}
+                                </span>
+                              </Tag>
+                              <Text className="text-danmo text-xs">项目 {index + 1}</Text>
+                            </div>
+                            <Title level={4} className="font-display !mb-0.5 !text-lg">
+                              {project.name}
+                            </Title>
+                            <Text className="text-danmo text-sm block">
+                              {project.description}
+                            </Text>
+                          </div>
+                        </div>
+
+                        {/* Progress */}
+                        {!isLocked && (
+                          <div className="mb-5">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <Text className="text-xs text-danmo">完成进度</Text>
+                              <Text className="text-xs font-medium text-mohei">
+                                {project.completed_count}/{project.total_count}
+                              </Text>
+                            </div>
+                            <AntProgress
+                              percent={project.progress}
+                              strokeColor={project.status === 'completed' ? '#5A9A6E' : '#C73E3A'}
+                              trailColor="#F5F2EB"
+                              size="small"
+                              showInfo={false}
+                            />
+                          </div>
+                        )}
+
+                        {/* Unlock condition */}
+                        {isLocked && project.unlock_condition && (
+                          <div className="p-3 bg-xuanzhi-warm rounded-lg mb-4">
+                            <Text className="text-sm text-danmo">
+                              解锁条件：完成「{projects.find(p => p.id === project.unlock_condition?.project_id)?.name || '前置项目'}」
+                            </Text>
+                          </div>
+                        )}
+
+                        {/* Sub-projects */}
+                        <div className="border-t border-danmo-light pt-4">
+                          <Text className="text-xs text-danmo font-medium mb-3 block">
+                            子项目
+                          </Text>
+                          <div className="flex flex-wrap gap-3">
+                            {project.sub_projects.map((sp) => (
+                              <button
+                                key={sp.id}
+                                onClick={() => handleNavigate(sp.path, sp.status)}
+                                className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-lg border transition-all text-left ${
+                                  sp.status === 'locked'
+                                    ? 'border-danmo-light bg-xuanzhi-warm/50 text-danmo cursor-not-allowed opacity-60'
+                                    : sp.status === 'completed'
+                                    ? 'border-zhuqing bg-zhuqing-50 text-zhuqing hover:bg-zhuqing-100 hover:shadow-card'
+                                    : 'border-danmo-light bg-white text-mohei hover:border-zhusha hover:bg-zhusha-50 hover:text-zhusha hover:shadow-card'
+                                }`}
+                              >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${
+                                  sp.status === 'locked'
+                                    ? 'bg-gray-100 text-danmo'
+                                    : sp.status === 'completed'
+                                    ? 'bg-zhuqing-100 text-zhuqing'
+                                    : 'bg-zhusha-50 text-zhusha group-hover:bg-zhusha group-hover:text-white transition-colors'
+                                }`}>
+                                  {subProjectIcons[sp.slug] || <ArrowRightOutlined className="text-xs" />}
+                                </div>
+                                <span className="text-sm font-medium whitespace-nowrap">{sp.name}</span>
+                                {sp.status === 'completed' && (
+                                  <CheckCircleOutlined className="text-zhuqing text-xs flex-shrink-0" />
+                                )}
+                                {sp.status === 'locked' && (
+                                  <LockOutlined className="text-danmo text-xs flex-shrink-0" />
+                                )}
+                                {sp.status === 'in_progress' && (
+                                  <ArrowRightOutlined className="text-zhusha text-xs flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
                     </div>
                   </div>
-                </Card>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         )}
+      </div>
       </div>
 
       <Modal
