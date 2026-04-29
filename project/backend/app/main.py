@@ -38,7 +38,11 @@ app = FastAPI(title="经典常谈伴学平台", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5173")],
+    allow_origins=[
+        os.getenv("FRONTEND_URL", "http://localhost:5173"),
+        "http://jingdianread.nat100.top",
+        "https://jingdianread.nat100.top",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

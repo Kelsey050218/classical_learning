@@ -10,13 +10,19 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     port: 5173,
-    allowedHosts: true,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+    },
+    hmr: {
+      host: 'jingdianread.nat100.top',
+      clientPort: 443,
+      protocol: 'wss',
     },
   },
 })
