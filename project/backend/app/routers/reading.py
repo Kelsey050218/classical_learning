@@ -126,7 +126,7 @@ def create_annotation(
         )
 
     # Validate annotation type
-    valid_types = ["knowledge", "connection", "question"]
+    valid_types = ["mark", "question", "connection", "insight"]
     if annotation_create.annotation_type not in valid_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -139,7 +139,8 @@ def create_annotation(
         position_start=annotation_create.position_start,
         position_end=annotation_create.position_end,
         content=annotation_create.content,
-        annotation_type=annotation_create.annotation_type
+        annotation_type=annotation_create.annotation_type,
+        mark_symbol=annotation_create.mark_symbol,
     )
 
     db.add(annotation)

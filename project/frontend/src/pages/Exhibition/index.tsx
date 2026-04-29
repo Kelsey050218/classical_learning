@@ -171,15 +171,16 @@ const Exhibition: React.FC = () => {
       const res = await listWorks(typeParam)
       // Filter to only show published works in exhibition
       const published = res.data.filter((w: Work) => w.status === 'published')
-      if (published.length === 0) {
-        // Fallback to mock data when no real data exists
-        const filtered = activeType === 'all'
-          ? MOCK_WORKS
-          : MOCK_WORKS.filter(w => w.work_type === activeType)
-        setWorks(filtered)
-      } else {
-        setWorks(published)
-      }
+      // Merge mock works with real data
+      const mockFiltered = activeType === 'all'
+        ? MOCK_WORKS
+        : MOCK_WORKS.filter(w => w.work_type === activeType)
+      const merged = [...mockFiltered, ...published]
+      // Deduplicate by id
+      const deduped = merged.filter((w, idx, arr) =>
+        arr.findIndex(item => item.id === w.id) === idx
+      )
+      setWorks(deduped)
     } catch (err) {
       console.error('Failed to load works:', err)
       // Fallback to mock data on API error

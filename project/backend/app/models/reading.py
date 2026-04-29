@@ -26,4 +26,5 @@ class Annotation(BaseModel):
     position_start = Column(Integer, nullable=False)
     position_end = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
-    annotation_type = Column(String(20), nullable=False)  # knowledge, connection, question
+    annotation_type = Column(String(20), nullable=False)  # mark, question, connection, insight
+    mark_symbol = Column(String(20), nullable=True)       # circle, dot, underline, box (for mark type)
