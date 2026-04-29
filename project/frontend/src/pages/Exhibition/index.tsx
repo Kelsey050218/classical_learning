@@ -7,6 +7,8 @@ import {
   FileTextOutlined,
   EyeOutlined,
   UserOutlined,
+  PlayOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import { listWorks, getWork, Work } from '../../api/works'
@@ -30,6 +32,12 @@ const typeColors: Record<string, string> = {
   video: 'bg-zhusha text-white',
   audio: 'bg-shiqing text-white',
   script: 'bg-tenghuang text-white',
+}
+
+const typeTagColors: Record<string, string> = {
+  video: '#C73E3A',
+  audio: '#5B9A8B',
+  script: '#E6A23C',
 }
 
 const MOCK_WORKS: Work[] = [
@@ -169,21 +177,17 @@ const Exhibition: React.FC = () => {
     try {
       const typeParam = activeType === 'all' ? undefined : activeType
       const res = await listWorks(typeParam)
-      // Filter to only show published works in exhibition
       const published = res.data.filter((w: Work) => w.status === 'published')
-      // Merge mock works with real data
       const mockFiltered = activeType === 'all'
         ? MOCK_WORKS
         : MOCK_WORKS.filter(w => w.work_type === activeType)
       const merged = [...mockFiltered, ...published]
-      // Deduplicate by id
       const deduped = merged.filter((w, idx, arr) =>
         arr.findIndex(item => item.id === w.id) === idx
       )
       setWorks(deduped)
     } catch (err) {
       console.error('Failed to load works:', err)
-      // Fallback to mock data on API error
       const filtered = activeType === 'all'
         ? MOCK_WORKS
         : MOCK_WORKS.filter(w => w.work_type === activeType)
@@ -194,6 +198,14 @@ const Exhibition: React.FC = () => {
   }
 
   const handleViewDetail = async (work: Work) => {
+    // If it's a mock work, skip API call
+    const mockWork = MOCK_WORKS.find(w => w.id === work.id)
+    if (mockWork) {
+      setSelectedWork(mockWork)
+      setDetailVisible(true)
+      return
+    }
+
     setDetailLoading(true)
     try {
       const res = await getWork(work.id)
@@ -205,8 +217,6 @@ const Exhibition: React.FC = () => {
       setDetailLoading(false)
     }
   }
-
-  const filteredWorks = works
 
   if (loading) {
     return (
@@ -220,150 +230,204 @@ const Exhibition: React.FC = () => {
 
   return (
     <Layout>
-      <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+      <div className="relative -mx-4 -my-6 px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
+        {/* Background */}
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.12] pointer-events-none"
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/exhibition.png)' }}
         />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F2EB]/60 via-transparent to-[#F5F2EB]/80 pointer-events-none" />
+
         <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Title level={2} className="font-display !mb-2">
-            成果展厅
-          </Title>
-          <Text className="text-danmo">
-            展示同学们的创作成果，灵感碰撞的公共空间
-          </Text>
-        </div>
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <TrophyOutlined className="text-2xl text-zhusha" />
+              <Title level={2} className="font-display !mb-0">
+                成果展厅
+              </Title>
+            </div>
+            <Text className="text-danmo text-base block">
+              展示同学们的创作成果，灵感碰撞的公共空间
+            </Text>
+          </div>
 
-        {/* Tabs */}
-        <Tabs
-          activeKey={activeType}
-          onChange={setActiveType}
-          className="mb-6"
-        >
-          <TabPane tab="全部作品" key="all" />
-          <TabPane tab={<span><PlayCircleOutlined /> 视频</span>} key="video" />
-          <TabPane tab={<span><AudioOutlined /> 音频</span>} key="audio" />
-          <TabPane tab={<span><FileTextOutlined /> 脚本</span>} key="script" />
-        </Tabs>
-
-        {/* Works Grid */}
-        {filteredWorks.length === 0 ? (
-          <Empty description="暂无作品，快来发布你的第一个创作吧！" />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorks.map((work) => (
-              <div
-                key={work.id}
-                className="bg-white rounded-xl border border-danmo-light overflow-hidden hover:shadow-card-hover transition-shadow cursor-pointer"
-                onClick={() => handleViewDetail(work)}
-              >
-                {/* Cover / Placeholder */}
-                <div className="h-40 bg-xuanzhi-warm flex items-center justify-center relative">
-                  {work.cover_url ? (
-                    <img
-                      src={work.cover_url}
-                      alt={work.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl ${typeColors[work.work_type] || 'bg-shiqing text-white'}`}>
-                      {typeIcons[work.work_type]}
-                    </div>
-                  )}
-                  <div className="absolute top-3 right-3">
-                    <Tag color={work.work_type === 'video' ? '#C73E3A' : work.work_type === 'audio' ? '#5B9A8B' : '#E6A23C'}>
-                      {typeLabels[work.work_type]}
-                    </Tag>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                  <Title level={5} className="font-display !mb-2 truncate">
-                    {work.title}
-                  </Title>
-                  {work.description && (
-                    <Text className="text-danmo text-sm block mb-3 line-clamp-2">
-                      {work.description}
-                    </Text>
-                  )}
-                  <div className="flex items-center justify-between text-sm text-danmo">
-                    <div className="flex items-center gap-1">
-                      <UserOutlined />
-                      <span>用户 {work.user_id}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <EyeOutlined />
-                      <span>查看详情</span>
-                    </div>
-                  </div>
-                </div>
+          {/* Stats Bar */}
+          <div className="flex justify-center gap-8 mb-8">
+            {[
+              { icon: <PlayCircleOutlined />, label: '视频作品', count: works.filter(w => w.work_type === 'video').length, color: 'text-zhusha' },
+              { icon: <AudioOutlined />, label: '音频作品', count: works.filter(w => w.work_type === 'audio').length, color: 'text-shiqing' },
+              { icon: <FileTextOutlined />, label: '脚本作品', count: works.filter(w => w.work_type === 'script').length, color: 'text-tenghuang' },
+            ].map((stat, idx) => (
+              <div key={idx} className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-5 py-2.5 rounded-full border border-danmo-light shadow-sm">
+                <span className={`text-lg ${stat.color}`}>{stat.icon}</span>
+                <span className="text-mohei font-medium">{stat.count}</span>
+                <span className="text-danmo text-sm">{stat.label}</span>
               </div>
             ))}
           </div>
-        )}
 
-        {/* Detail Modal */}
-        <Modal
-          title={selectedWork?.title}
-          open={detailVisible}
-          onCancel={() => setDetailVisible(false)}
-          footer={null}
-          width={720}
-        >
-          {detailLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Spin />
+          {/* Tabs */}
+          <Tabs
+            activeKey={activeType}
+            onChange={setActiveType}
+            className="mb-8"
+            centered
+            size="large"
+          >
+            <TabPane tab={<span className="px-2">全部作品</span>} key="all" />
+            <TabPane tab={<span className="flex items-center gap-1.5 px-2"><PlayCircleOutlined /> 视频</span>} key="video" />
+            <TabPane tab={<span className="flex items-center gap-1.5 px-2"><AudioOutlined /> 音频</span>} key="audio" />
+            <TabPane tab={<span className="flex items-center gap-1.5 px-2"><FileTextOutlined /> 脚本</span>} key="script" />
+          </Tabs>
+
+          {/* Works Grid */}
+          {works.length === 0 ? (
+            <Empty description="暂无作品，快来发布你的第一个创作吧！" className="py-16" />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+              {works.map((work) => (
+                <div
+                  key={work.id}
+                  className="group bg-white rounded-2xl border border-danmo-light/60 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                  onClick={() => handleViewDetail(work)}
+                >
+                  {/* Cover */}
+                  <div className="h-48 bg-gradient-to-br from-xuanzhi-warm to-[#F5F2EB] flex items-center justify-center relative overflow-hidden">
+                    {work.cover_url ? (
+                      <img
+                        src={work.cover_url}
+                        alt={work.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg ${typeColors[work.work_type] || 'bg-shiqing text-white'}`}>
+                          {typeIcons[work.work_type]}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Play overlay for video */}
+                    {work.work_type === 'video' && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                          <PlayOutlined className="text-xl text-zhusha ml-0.5" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Type Tag */}
+                    <div className="absolute top-3 right-3">
+                      <Tag color={typeTagColors[work.work_type]} className="px-2.5 py-0.5 text-xs font-medium border-0">
+                        {typeLabels[work.work_type]}
+                      </Tag>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <Title level={5} className="font-display !mb-2 line-clamp-1 group-hover:text-zhusha transition-colors">
+                      {work.title}
+                    </Title>
+                    {work.description && (
+                      <Text className="text-danmo text-sm block mb-4 line-clamp-2 leading-relaxed">
+                        {work.description}
+                      </Text>
+                    )}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1.5 text-danmo">
+                        <UserOutlined />
+                        <span>用户 {work.user_id}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-zhusha font-medium">
+                        <EyeOutlined />
+                        <span>查看详情</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : selectedWork ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Tag color={selectedWork.work_type === 'video' ? '#C73E3A' : selectedWork.work_type === 'audio' ? '#5B9A8B' : '#E6A23C'}>
+          )}
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      <Modal
+        title={null}
+        open={detailVisible}
+        onCancel={() => {
+          setDetailVisible(false)
+          setSelectedWork(null)
+        }}
+        footer={null}
+        width={800}
+        centered
+        destroyOnClose
+      >
+        {detailLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Spin size="large" />
+          </div>
+        ) : selectedWork ? (
+          <div className="space-y-5">
+            {/* Modal Header */}
+            <div className="border-b border-danmo-light pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Tag color={typeTagColors[selectedWork.work_type]} className="px-2.5 py-0.5 text-xs font-medium border-0">
                   {typeLabels[selectedWork.work_type]}
                 </Tag>
-                <Text className="text-danmo text-sm">
-                  创建时间: {new Date(selectedWork.created_at).toLocaleDateString()}
+                <Text className="text-danmo text-sm flex items-center gap-1">
+                  <ClockCircleOutlined />
+                  {new Date(selectedWork.created_at).toLocaleDateString()}
                 </Text>
               </div>
+              <Title level={4} className="font-display !mb-0">
+                {selectedWork.title}
+              </Title>
+            </div>
 
-              {selectedWork.description && (
-                <Text className="text-mohei block">
-                  {selectedWork.description}
-                </Text>
-              )}
+            {/* Description */}
+            {selectedWork.description && (
+              <Text className="text-mohei text-base block leading-relaxed">
+                {selectedWork.description}
+              </Text>
+            )}
 
-              {selectedWork.content && (
-                <div className="bg-xuanzhi-warm p-4 rounded-lg">
-                  <pre className="whitespace-pre-wrap font-sans text-mohei text-sm leading-relaxed">
-                    {selectedWork.content}
-                  </pre>
-                </div>
-              )}
-
-              {selectedWork.file_url && (
-                <div className="mt-4">
-                  {selectedWork.work_type === 'video' ? (
-                    <video
-                      src={selectedWork.file_url}
-                      controls
-                      className="w-full rounded-lg"
-                    />
-                  ) : selectedWork.work_type === 'audio' ? (
+            {/* Video / Audio Player */}
+            {selectedWork.file_url && (
+              <div className="rounded-xl overflow-hidden bg-black">
+                {selectedWork.work_type === 'video' ? (
+                  <video
+                    src={selectedWork.file_url}
+                    controls
+                    className="w-full max-h-[420px]"
+                    poster=""
+                  />
+                ) : selectedWork.work_type === 'audio' ? (
+                  <div className="p-6 bg-gradient-to-r from-xuanzhi-warm to-white">
                     <audio
                       src={selectedWork.file_url}
                       controls
                       className="w-full"
                     />
-                  ) : null}
-                </div>
-              )}
-            </div>
-          ) : null}
-        </Modal>
-      </div>
-      </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {/* Content */}
+            {selectedWork.content && (
+              <div className="bg-xuanzhi-warm/50 p-5 rounded-xl border border-danmo-light/40">
+                <pre className="whitespace-pre-wrap font-sans text-mohei text-sm leading-relaxed">
+                  {selectedWork.content}
+                </pre>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </Modal>
     </Layout>
   )
 }

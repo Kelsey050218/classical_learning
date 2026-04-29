@@ -75,9 +75,24 @@ interface ParagraphInfo {
 }
 
 const ANNOTATION_TYPES = [
-  { key: 'knowledge', label: '知识锚点式', color: 'bg-shiqing text-white' },
-  { key: 'connection', label: '古今勾连式', color: 'bg-tenghuang text-white' },
-  { key: 'question', label: '质疑思辨式', color: 'bg-zhusha text-white' },
+  { key: 'mark', label: '圈点勾画法', color: 'bg-[#8B6914] text-white', symbol: '○' },
+  { key: 'question', label: '质疑问难法', color: 'bg-[#4A5568] text-white', symbol: '?' },
+  { key: 'connection', label: '联想拓展法', color: 'bg-[#2B6CB0] text-white', symbol: '→' },
+  { key: 'insight', label: '感悟评点法', color: 'bg-[#C73E3A] text-white', symbol: '★' },
+]
+
+const SYMBOL_OPTIONS = [
+  { key: 'circle', label: '○ 圈出', desc: '关键词、核心概念、专有名词、数字' },
+  { key: 'dot', label: '· 点出', desc: '重点句、主旨句、过渡句、总结句' },
+  { key: 'underline', label: '—— 勾出', desc: '结构线、层次关系、逻辑递进' },
+  { key: 'box', label: '□ 画出', desc: '疑问框、存疑处、待查证' },
+]
+
+const CONNECTION_OPTIONS = [
+  { key: 'self', label: '由人及己', desc: '文本与自身经历的对照' },
+  { key: 'modern', label: '由古及今', desc: '古代现象在当代社会的遗存或转化' },
+  { key: 'cross', label: '由此及彼', desc: '同一作者其他作品或不同作者同类主题' },
+  { key: 'network', label: '由点到面', desc: '从具体知识点扩展到相关文化背景、学术脉络' },
 ]
 
 const CARD_TEMPLATES = [
@@ -131,10 +146,14 @@ function parseAnnotationContent(content: string): any {
     if (
       parsed &&
       typeof parsed === 'object' &&
-      (parsed.mark_type !== undefined ||
-        parsed.paraphrase !== undefined ||
-        parsed.trigger_text !== undefined ||
-        parsed.question_point !== undefined)
+      (parsed.mark_symbol !== undefined ||
+        parsed.note !== undefined ||
+        parsed.question_text !== undefined ||
+        parsed.my_view !== undefined ||
+        parsed.connection_type !== undefined ||
+        parsed.connection_content !== undefined ||
+        parsed.feeling !== undefined ||
+        parsed.insight_text !== undefined)
     ) {
       return parsed
     }
@@ -148,25 +167,46 @@ function parseAnnotationContent(content: string): any {
 function formatAnnotationTooltip(parsed: any): string {
   if (parsed.text) return parsed.text
   const parts: string[] = []
-  if (parsed.mark_type) {
-    const map: Record<string, string> = {
-      concept: '核心概念',
-      fact: '关键史实',
-      view: '核心观点',
-    }
-    parts.push(`标记类型：${map[parsed.mark_type] || parsed.mark_type}`)
+
+  const symbolMap: Record<string, string> = {
+    circle: '○ 圈出',
+    dot: '· 点出',
+    underline: '—— 勾出',
+    box: '□ 画出',
   }
-  if (parsed.paraphrase) parts.push(`旁注释义：${parsed.paraphrase}`)
-  if (parsed.summary) parts.push(`尾注框架：${parsed.summary}`)
-  if (parsed.trigger_text) parts.push(`触发点：${parsed.trigger_text}`)
-  if (parsed.original_meaning) parts.push(`经典原意：${parsed.original_meaning}`)
-  if (parsed.modern_mapping) parts.push(`当下映射：${parsed.modern_mapping}`)
-  if (parsed.application) parts.push(`落地延伸：${parsed.application}`)
-  if (parsed.question_point) parts.push(`思辨点：${parsed.question_point}`)
+  const connMap: Record<string, string> = {
+    self: '由人及己',
+    modern: '由古及今',
+    cross: '由此及彼',
+    network: '由点到面',
+  }
+
+  // mark
+  if (parsed.mark_symbol) {
+    parts.push(`符号：${symbolMap[parsed.mark_symbol] || parsed.mark_symbol}`)
+  }
+  if (parsed.mark_target) parts.push(`标记对象：${parsed.mark_target}`)
+  if (parsed.note) parts.push(`备注：${parsed.note}`)
+
+  // question
+  if (parsed.question_text) parts.push(`疑问：${parsed.question_text}`)
   if (parsed.original_view) parts.push(`原文观点：${parsed.original_view}`)
-  if (parsed.my_question) parts.push(`我的疑问：${parsed.my_question}`)
-  if (parsed.my_view) parts.push(`我的观点：${parsed.my_view}`)
-  if (parsed.verification) parts.push(`拓展验证：${parsed.verification}`)
+  if (parsed.my_view) parts.push(`我的判断：${parsed.my_view}`)
+  if (parsed.verification) parts.push(`求证过程：${parsed.verification}`)
+
+  // connection
+  if (parsed.connection_type) {
+    parts.push(`联想类型：${connMap[parsed.connection_type] || parsed.connection_type}`)
+  }
+  if (parsed.trigger_text) parts.push(`触发点：${parsed.trigger_text}`)
+  if (parsed.connection_content) parts.push(`联想内容：${parsed.connection_content}`)
+
+  // insight
+  if (parsed.feeling) parts.push(`【感】${parsed.feeling}`)
+  if (parsed.evaluation) parts.push(`【评】${parsed.evaluation}`)
+  if (parsed.appreciation) parts.push(`【赏】${parsed.appreciation}`)
+  if (parsed.insight_text) parts.push(`【悟】${parsed.insight_text}`)
+
   return parts.join('\n') || JSON.stringify(parsed)
 }
 
@@ -187,7 +227,7 @@ const Reading: React.FC = () => {
   }, [unlockStatus])
   const [selectedText, setSelectedText] = useState('')
   const [selectedRange, setSelectedRange] = useState<{ start: number; end: number } | null>(null)
-  const [annotationType, setAnnotationType] = useState('knowledge')
+  const [annotationType, setAnnotationType] = useState('mark')
   const [settingsVisible, setSettingsVisible] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [activeTab, setActiveTab] = useState('reading')
@@ -210,24 +250,28 @@ const Reading: React.FC = () => {
   const [readingMode, setReadingMode] = useState(false)
   const [pageIndex, setPageIndex] = useState(0)
 
-  // Structured annotation form state
-  const [knowledgeForm, setKnowledgeForm] = useState({
-    mark_type: 'concept' as 'concept' | 'fact' | 'view',
-    paraphrase: '',
-    summary: '',
-  })
-  const [connectionForm, setConnectionForm] = useState({
-    trigger_text: '',
-    original_meaning: '',
-    modern_mapping: '',
-    application: '',
+  // Structured annotation form state (four master methods)
+  const [markForm, setMarkForm] = useState({
+    mark_symbol: 'circle' as 'circle' | 'dot' | 'underline' | 'box',
+    mark_target: '',
+    note: '',
   })
   const [questionForm, setQuestionForm] = useState({
-    question_point: '',
+    question_text: '',
     original_view: '',
-    my_question: '',
     my_view: '',
     verification: '',
+  })
+  const [connectionForm, setConnectionForm] = useState({
+    connection_type: 'cross' as 'self' | 'modern' | 'cross' | 'network',
+    trigger_text: '',
+    connection_content: '',
+  })
+  const [insightForm, setInsightForm] = useState({
+    feeling: '',
+    evaluation: '',
+    appreciation: '',
+    insight_text: '',
   })
 
   // Reading cards state
@@ -571,34 +615,41 @@ const Reading: React.FC = () => {
   }
 
   const buildAnnotationContent = (): string => {
-    if (annotationType === 'knowledge') {
+    if (annotationType === 'mark') {
       return JSON.stringify({
-        mark_type: knowledgeForm.mark_type,
-        paraphrase: knowledgeForm.paraphrase,
-        summary: knowledgeForm.summary,
+        mark_symbol: markForm.mark_symbol,
+        mark_target: markForm.mark_target || selectedText,
+        note: markForm.note,
+      })
+    }
+    if (annotationType === 'question') {
+      return JSON.stringify({
+        question_text: questionForm.question_text || selectedText,
+        original_view: questionForm.original_view,
+        my_view: questionForm.my_view,
+        verification: questionForm.verification,
       })
     }
     if (annotationType === 'connection') {
       return JSON.stringify({
+        connection_type: connectionForm.connection_type,
         trigger_text: connectionForm.trigger_text || selectedText,
-        original_meaning: connectionForm.original_meaning,
-        modern_mapping: connectionForm.modern_mapping,
-        application: connectionForm.application,
+        connection_content: connectionForm.connection_content,
       })
     }
     return JSON.stringify({
-      question_point: questionForm.question_point || selectedText,
-      original_view: questionForm.original_view,
-      my_question: questionForm.my_question,
-      my_view: questionForm.my_view,
-      verification: questionForm.verification,
+      feeling: insightForm.feeling,
+      evaluation: insightForm.evaluation,
+      appreciation: insightForm.appreciation,
+      insight_text: insightForm.insight_text,
     })
   }
 
   const resetAnnotationForms = () => {
-    setKnowledgeForm({ mark_type: 'concept', paraphrase: '', summary: '' })
-    setConnectionForm({ trigger_text: '', original_meaning: '', modern_mapping: '', application: '' })
-    setQuestionForm({ question_point: '', original_view: '', my_question: '', my_view: '', verification: '' })
+    setMarkForm({ mark_symbol: 'circle', mark_target: '', note: '' })
+    setQuestionForm({ question_text: '', original_view: '', my_view: '', verification: '' })
+    setConnectionForm({ connection_type: 'cross', trigger_text: '', connection_content: '' })
+    setInsightForm({ feeling: '', evaluation: '', appreciation: '', insight_text: '' })
   }
 
   const handleAddAnnotation = async () => {
@@ -607,13 +658,17 @@ const Reading: React.FC = () => {
       return
     }
     const content = buildAnnotationContent()
+    const payload: any = {
+      position_start: selectedRange.start,
+      position_end: selectedRange.end,
+      content,
+      annotation_type: annotationType,
+    }
+    if (annotationType === 'mark') {
+      payload.mark_symbol = markForm.mark_symbol
+    }
     try {
-      const res = await apiClient.post<AnnotationItem>(`/reading/annotations/${currentChapterId}`, {
-        position_start: selectedRange.start,
-        position_end: selectedRange.end,
-        content,
-        annotation_type: annotationType,
-      })
+      const res = await apiClient.post<AnnotationItem>(`/reading/annotations/${currentChapterId}`, payload)
       setAnnotations(prev => [...prev, res.data])
       resetAnnotationForms()
       setSelectedText('')
@@ -826,7 +881,7 @@ const Reading: React.FC = () => {
         </div>
       )}
       <div>
-        <Text className="text-xs text-danmo block mb-2">批注方式</Text>
+        <Text className="text-xs text-danmo block mb-2">批注方式（四种名家批注法）</Text>
         <Radio.Group
           value={annotationType}
           onChange={e => setAnnotationType(e.target.value)}
@@ -834,62 +889,40 @@ const Reading: React.FC = () => {
         >
           {ANNOTATION_TYPES.map(t => (
             <Radio.Button key={t.key} value={t.key} className="!rounded-lg">
+              <span className="mr-1">{t.symbol}</span>
               {t.label}
             </Radio.Button>
           ))}
         </Radio.Group>
       </div>
 
-      {annotationType === 'knowledge' && (
+      {annotationType === 'mark' && (
         <div className="space-y-3">
           <div>
-            <Text className="text-xs text-danmo block mb-1">标记类型</Text>
+            <Text className="text-xs text-danmo block mb-1">批注符号</Text>
             <Radio.Group
-              value={knowledgeForm.mark_type}
-              onChange={e => setKnowledgeForm(prev => ({ ...prev, mark_type: e.target.value }))}
+              value={markForm.mark_symbol}
+              onChange={e => setMarkForm(prev => ({ ...prev, mark_symbol: e.target.value }))}
+              className="flex flex-wrap gap-2"
             >
-              <Radio value="concept">核心概念</Radio>
-              <Radio value="fact">关键史实</Radio>
-              <Radio value="view">核心观点</Radio>
+              {SYMBOL_OPTIONS.map(s => (
+                <Radio.Button key={s.key} value={s.key} className="!rounded-lg text-xs">
+                  <Tooltip title={s.desc}>
+                    <span>{s.label}</span>
+                  </Tooltip>
+                </Radio.Button>
+              ))}
             </Radio.Group>
           </div>
-          <TextArea
-            placeholder="旁注释义：用自己的话写 1-2 句极简解释"
-            value={knowledgeForm.paraphrase}
-            onChange={e => setKnowledgeForm(prev => ({ ...prev, paraphrase: e.target.value }))}
-            rows={3}
-          />
           <Input
-            placeholder="尾注框架：1 句话梳理本节逻辑"
-            value={knowledgeForm.summary}
-            onChange={e => setKnowledgeForm(prev => ({ ...prev, summary: e.target.value }))}
-          />
-        </div>
-      )}
-
-      {annotationType === 'connection' && (
-        <div className="space-y-3">
-          <Input
-            placeholder="触发点标记：波浪线标记的句子原文"
-            value={connectionForm.trigger_text || selectedText}
-            onChange={e => setConnectionForm(prev => ({ ...prev, trigger_text: e.target.value }))}
+            placeholder="标记对象：如关键词、重点句、结构线等"
+            value={markForm.mark_target || selectedText}
+            onChange={e => setMarkForm(prev => ({ ...prev, mark_target: e.target.value }))}
           />
           <TextArea
-            placeholder="经典原意：原文含义"
-            value={connectionForm.original_meaning}
-            onChange={e => setConnectionForm(prev => ({ ...prev, original_meaning: e.target.value }))}
-            rows={2}
-          />
-          <TextArea
-            placeholder="当下映射：与现实的联系"
-            value={connectionForm.modern_mapping}
-            onChange={e => setConnectionForm(prev => ({ ...prev, modern_mapping: e.target.value }))}
-            rows={2}
-          />
-          <TextArea
-            placeholder="落地延伸：应用场景（班会、视频脚本等）"
-            value={connectionForm.application}
-            onChange={e => setConnectionForm(prev => ({ ...prev, application: e.target.value }))}
+            placeholder="备注说明（可选）：补充解释或存疑内容"
+            value={markForm.note}
+            onChange={e => setMarkForm(prev => ({ ...prev, note: e.target.value }))}
             rows={2}
           />
         </div>
@@ -897,33 +930,89 @@ const Reading: React.FC = () => {
 
       {annotationType === 'question' && (
         <div className="space-y-3">
-          <Input
-            placeholder="思辨点锁定：?标记的争议内容"
-            value={questionForm.question_point || selectedText}
-            onChange={e => setQuestionForm(prev => ({ ...prev, question_point: e.target.value }))}
+          <TextArea
+            placeholder="【疑问】提出你的问题（为什么？真的吗？何以见得？）"
+            value={questionForm.question_text || selectedText}
+            onChange={e => setQuestionForm(prev => ({ ...prev, question_text: e.target.value }))}
+            rows={2}
           />
           <TextArea
-            placeholder="原文观点：作者原文观点"
+            placeholder="【原文观点】作者原文观点是什么？"
             value={questionForm.original_view}
             onChange={e => setQuestionForm(prev => ({ ...prev, original_view: e.target.value }))}
             rows={2}
           />
           <TextArea
-            placeholder="我的疑问/补充"
-            value={questionForm.my_question}
-            onChange={e => setQuestionForm(prev => ({ ...prev, my_question: e.target.value }))}
-            rows={2}
-          />
-          <TextArea
-            placeholder="我的观点"
+            placeholder="【我的判断】基于证据形成自己的初步判断"
             value={questionForm.my_view}
             onChange={e => setQuestionForm(prev => ({ ...prev, my_view: e.target.value }))}
             rows={2}
           />
           <TextArea
-            placeholder="拓展验证：验证方向，用于短片/辩论"
+            placeholder="【求证过程】查阅资料、回读文本、请教他人的过程"
             value={questionForm.verification}
             onChange={e => setQuestionForm(prev => ({ ...prev, verification: e.target.value }))}
+            rows={2}
+          />
+        </div>
+      )}
+
+      {annotationType === 'connection' && (
+        <div className="space-y-3">
+          <div>
+            <Text className="text-xs text-danmo block mb-1">联想类型</Text>
+            <Radio.Group
+              value={connectionForm.connection_type}
+              onChange={e => setConnectionForm(prev => ({ ...prev, connection_type: e.target.value }))}
+              className="flex flex-wrap gap-2"
+            >
+              {CONNECTION_OPTIONS.map(c => (
+                <Radio.Button key={c.key} value={c.key} className="!rounded-lg text-xs">
+                  <Tooltip title={c.desc}>
+                    <span>{c.label}</span>
+                  </Tooltip>
+                </Radio.Button>
+              ))}
+            </Radio.Group>
+          </div>
+          <Input
+            placeholder="触发点：引起联想的文本内容"
+            value={connectionForm.trigger_text || selectedText}
+            onChange={e => setConnectionForm(prev => ({ ...prev, trigger_text: e.target.value }))}
+          />
+          <TextArea
+            placeholder="联想内容：由此及彼建立的知识联系"
+            value={connectionForm.connection_content}
+            onChange={e => setConnectionForm(prev => ({ ...prev, connection_content: e.target.value }))}
+            rows={3}
+          />
+        </div>
+      )}
+
+      {annotationType === 'insight' && (
+        <div className="space-y-3">
+          <TextArea
+            placeholder="【感】情感反应——喜欢、感动、愤怒、困惑"
+            value={insightForm.feeling}
+            onChange={e => setInsightForm(prev => ({ ...prev, feeling: e.target.value }))}
+            rows={2}
+          />
+          <TextArea
+            placeholder="【评】价值判断——赞同、反对、补充"
+            value={insightForm.evaluation}
+            onChange={e => setInsightForm(prev => ({ ...prev, evaluation: e.target.value }))}
+            rows={2}
+          />
+          <TextArea
+            placeholder="【赏】审美品味——修辞、节奏、意象、氛围"
+            value={insightForm.appreciation}
+            onChange={e => setInsightForm(prev => ({ ...prev, appreciation: e.target.value }))}
+            rows={2}
+          />
+          <TextArea
+            placeholder="【悟】哲理升华——文本对自己生活态度的启发"
+            value={insightForm.insight_text}
+            onChange={e => setInsightForm(prev => ({ ...prev, insight_text: e.target.value }))}
             rows={2}
           />
         </div>
