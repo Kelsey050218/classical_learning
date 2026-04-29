@@ -17,7 +17,7 @@ def seed_timeline_nodes():
                 "《楚辞》：浪漫主义源头，屈原《离骚》开创骚体"
             ],
             "sort_order": 1,
-            "image_url": "/images/timeline/xianqin.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/xianqin.png"
         },
         {
             "era": "汉代",
@@ -29,7 +29,7 @@ def seed_timeline_nodes():
                 "古诗十九首：五言冠冕，文人诗开端"
             ],
             "sort_order": 2,
-            "image_url": "/images/timeline/han.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/han.png"
         },
         {
             "era": "魏晋南北朝",
@@ -42,7 +42,7 @@ def seed_timeline_nodes():
                 "永明体：讲究声律平仄，为唐诗奠基"
             ],
             "sort_order": 3,
-            "image_url": "/images/timeline/weijin.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/weijin.png"
         },
         {
             "era": "唐代",
@@ -54,7 +54,7 @@ def seed_timeline_nodes():
                 "李白（浪漫）、杜甫（写实）、白居易（新乐府）"
             ],
             "sort_order": 4,
-            "image_url": "/images/timeline/tang.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/tang.png"
         },
         {
             "era": "宋代",
@@ -67,7 +67,7 @@ def seed_timeline_nodes():
                 "词合乐可歌，长短句为特征"
             ],
             "sort_order": 5,
-            "image_url": "/images/timeline/song.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/song.png"
         },
         {
             "era": "元代",
@@ -80,7 +80,7 @@ def seed_timeline_nodes():
                 "元杂剧：关汉卿、马致远"
             ],
             "sort_order": 6,
-            "image_url": "/images/timeline/yuan.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/yuan.png"
         },
         {
             "era": "明清",
@@ -93,7 +93,7 @@ def seed_timeline_nodes():
                 "小说戏曲鼎盛，诗歌难越唐宋"
             ],
             "sort_order": 7,
-            "image_url": "/images/timeline/mingqing.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/mingqing.png"
         }
     ]
 

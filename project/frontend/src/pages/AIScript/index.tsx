@@ -127,7 +127,7 @@ const AIScript: React.FC = () => {
       <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
-          style={{ backgroundImage: 'url(/images/backgrounds/learning.png)' }}
+          style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}

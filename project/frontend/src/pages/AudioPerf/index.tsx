@@ -14,16 +14,16 @@ const { TextArea } = Input
 const { Option } = Select
 
 const BGM_FILES = [
-  { name: '故宫的记忆 (二胡曲)', file: '/audio/bgms/刘连国 - 故宫的记忆 (二胡曲).ogg' },
-  { name: '橄榄树 (二胡曲)', file: '/audio/bgms/刘连国 - 橄榄树 (二胡曲).ogg' },
-  { name: '春江花月夜 (古筝)', file: '/audio/bgms/木木仔 - 春江花月夜 (古筝独奏版).ogg' },
-  { name: '云水禅心 (古琴)', file: '/audio/bgms/王先宏 - 云水禅心 (古琴纯音乐).ogg' },
-  { name: '渔舟唱晚 (古筝)', file: '/audio/bgms/邱宛心 - 渔舟唱晚 (古筝独奏).ogg' },
-  { name: '平湖秋月', file: '/audio/bgms/中央民族乐团 - 平湖秋月.ogg' },
-  { name: '高山流水', file: '/audio/bgms/中央民族乐团 - 高山流水.ogg' },
-  { name: '英雄的黎明', file: '/audio/bgms/横山菁児 - 英雄的黎明.ogg' },
-  { name: '西厢词', file: '/audio/bgms/饶宁新 - 西厢词.ogg' },
-  { name: '酒狂', file: '/audio/bgms/龚一 - 酒狂.ogg' },
+  { name: '故宫的记忆 (二胡曲)', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/刘连国 - 故宫的记忆 (二胡曲).ogg' },
+  { name: '橄榄树 (二胡曲)', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/刘连国 - 橄榄树 (二胡曲).ogg' },
+  { name: '春江花月夜 (古筝)', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/木木仔 - 春江花月夜 (古筝独奏版).ogg' },
+  { name: '云水禅心 (古琴)', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/王先宏 - 云水禅心 (古琴纯音乐).ogg' },
+  { name: '渔舟唱晚 (古筝)', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/邱宛心 - 渔舟唱晚 (古筝独奏).ogg' },
+  { name: '平湖秋月', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/中央民族乐团 - 平湖秋月.ogg' },
+  { name: '高山流水', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/中央民族乐团 - 高山流水.ogg' },
+  { name: '英雄的黎明', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/横山菁児 - 英雄的黎明.ogg' },
+  { name: '西厢词', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/饶宁新 - 西厢词.ogg' },
+  { name: '酒狂', file: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/audio/bgms/龚一 - 酒狂.ogg' },
 ]
 
 const AudioPerf: React.FC = () => {
@@ -233,7 +233,7 @@ const AudioPerf: React.FC = () => {
       <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
-          style={{ backgroundImage: 'url(/images/backgrounds/learning.png)' }}
+          style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}

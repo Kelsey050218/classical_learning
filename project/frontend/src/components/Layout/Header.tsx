@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick: _onMenuClick }) => {
               onClick={() => navigate('/')}
             >
               <img
-                src="/logo-avatar.jpg"
+                src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/logo-avatar.jpg"
                 alt="经典常谈"
                 className="w-10 h-10 rounded object-cover"
               />
@@ -122,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick: _onMenuClick }) => {
               <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-xuanzhi-warm transition-colors">
                 <Avatar
                   size="small"
-                  src="/avatar-default.png"
+                  src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/avatar-default.png"
                   icon={<UserOutlined />}
                   className="bg-shiqing"
                 />

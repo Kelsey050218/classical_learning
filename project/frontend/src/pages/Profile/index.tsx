@@ -263,7 +263,7 @@ const Profile: React.FC = () => {
       <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
-          style={{ backgroundImage: 'url(/images/backgrounds/profile.png)' }}
+          style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/profile.png)' }}
         />
         <div className="relative z-10">
           {/* User Info Card */}
@@ -272,7 +272,7 @@ const Profile: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-zhusha-100 rounded-full translate-y-1/2 -translate-x-1/2 opacity-30 blur-3xl" />
 
         <div className="relative flex items-center gap-6">
-          <Avatar size={80} src="/avatar-default.png" icon={<UserOutlined />} className="bg-shiqing text-3xl" />
+          <Avatar size={80} src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/avatar-default.png" icon={<UserOutlined />} className="bg-shiqing text-3xl" />
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <Title level={3} className="font-display !mb-0">
