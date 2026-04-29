@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey, Boolean
 from app.models.base import BaseModel
 
 
@@ -26,3 +26,7 @@ class Work(BaseModel):
     content = Column(Text, nullable=True)              # 脚本文本内容
     chapter_id = Column(Integer, ForeignKey("chapters.id"), nullable=True)
     status = Column(Enum(WorkStatus), default=WorkStatus.draft)
+    is_pinned = Column(Boolean, default=False)        # admin 置顶
+    is_unlisted = Column(Boolean, default=False)      # admin 下架
+    view_count = Column(Integer, default=0)           # 浏览量
+    like_count = Column(Integer, default=0)           # 点赞数（反规范化）

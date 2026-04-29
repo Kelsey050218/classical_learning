@@ -59,6 +59,7 @@ interface AnnotationItem {
   position_end: number
   content: string
   annotation_type: string
+  mark_symbol?: string
   created_at: string
 }
 

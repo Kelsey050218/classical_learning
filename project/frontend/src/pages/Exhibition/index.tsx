@@ -1,17 +1,30 @@
 import React, { useEffect, useState } from 'react'
-import { Typography, Spin, Empty, Tabs, Modal, Tag, message } from 'antd'
+import { Typography, Spin, Empty, Tabs, Modal, Tag, message, Select, Switch, Input, Button, Avatar } from 'antd'
 import {
   TrophyOutlined,
   PlayCircleOutlined,
   AudioOutlined,
   FileTextOutlined,
   EyeOutlined,
-  UserOutlined,
-  PlayOutlined,
+  // UserOutlined,
+  CaretRightOutlined,
   ClockCircleOutlined,
+  PushpinOutlined,
+  DeleteOutlined,
+  FireOutlined,
+  LikeOutlined,
+  LikeFilled,
+  MessageOutlined,
+  SendOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
-import { listWorks, getWork, Work } from '../../api/works'
+import {
+  listWorks, getWork, pinWork, unlistWork, likeWork,
+  voteWork, getVoteSettings, updateVoteSettings,
+  getWorkComments, createWorkComment, deleteWorkComment,
+  Work, WorkComment,
+} from '../../api/works'
+import { useAuthStore } from '../../stores/auth'
 
 const { Title, Text } = Typography
 const { TabPane } = Tabs
@@ -40,177 +53,154 @@ const typeTagColors: Record<string, string> = {
   script: '#E6A23C',
 }
 
-const MOCK_WORKS: Work[] = [
-  {
-    id: 1,
-    user_id: 8,
-    title: '《诗经》之美——从风雅颂看先秦生活',
-    description: '通过视频剪辑，展现《诗经》中风雅颂三种体裁的不同风貌，配以古风音乐和字幕解读。',
-    content: '本作品选取了《诗经》中的经典篇目进行解读，从"关关雎鸠"到"蒹葭苍苍"，带领观众穿越三千年，感受先民的情感与智慧。',
-    work_type: 'video',
-    status: 'published',
-    cover_url: '',
-    file_url: '',
-    created_at: '2025-03-15T10:30:00Z',
-    updated_at: '2025-03-15T10:30:00Z',
-  },
-  {
-    id: 2,
-    user_id: 12,
-    title: '《史记》列传音频演绎——项羽本纪',
-    description: '用声音演绎《史记·项羽本纪》中的经典片段，感受西楚霸王的豪情与悲壮。',
-    content: '力拔山兮气盖世，时不利兮骓不逝。骓不逝兮可奈何，虞兮虞兮奈若何！',
-    work_type: 'audio',
-    status: 'published',
-    cover_url: '',
-    file_url: '',
-    created_at: '2025-03-18T14:20:00Z',
-    updated_at: '2025-03-18T14:20:00Z',
-  },
-  {
-    id: 3,
-    user_id: 5,
-    title: 'AI短视频脚本：如果孔子穿越到现代',
-    description: '以"古今勾连"为创意核心，创作孔子穿越到现代校园的短视频脚本，引发对经典当代价值的思考。',
-    content: '场景一：孔子步入现代中学课堂\n孔子：（环顾四周）此为何物？众人皆伏首于方寸之屏？\n学生甲：（抬头）老爷子，这是平板电脑，上课用的。\n孔子：（抚须微笑）吾尝言"学而不思则罔"，今之学子，可思否？',
-    work_type: 'script',
-    status: 'published',
-    cover_url: '',
-    file_url: '',
-    created_at: '2025-03-20T09:15:00Z',
-    updated_at: '2025-03-20T09:15:00Z',
-  },
-  {
-    id: 4,
-    user_id: 21,
-    title: '《经典常谈》读书卡——说文解字篇',
-    description: '精心制作的读书卡，记录阅读《说文解字》篇的知识要点和心得感悟。',
-    content: '核心概念：六书（象形、指事、会意、形声、转注、假借）\n关键史实：许慎编撰《说文解字》，收字9353个\n核心观点：文字是文化传承的基石',
-    work_type: 'script',
-    status: 'published',
-    cover_url: '',
-    file_url: '',
-    created_at: '2025-03-22T16:45:00Z',
-    updated_at: '2025-03-22T16:45:00Z',
-  },
-  {
-    id: 5,
-    user_id: 15,
-    title: '《战国策》经典声演——邹忌讽齐王纳谏',
-    description: '分角色演绎《邹忌讽齐王纳谏》，通过声音塑造不同人物形象。',
-    content: '邹忌修八尺有余，而形貌昳丽。朝服衣冠，窥镜，谓其妻曰："我孰与城北徐公美？"',
-    work_type: 'audio',
-    status: 'published',
-    cover_url: '',
-    file_url: '',
-    created_at: '2025-03-25T11:00:00Z',
-    updated_at: '2025-03-25T11:00:00Z',
-  },
-  {
-    id: 6,
-    user_id: 33,
-    title: '诸子百家辩论短视频',
-    description: '用现代辩论赛的形式再现诸子百家思想碰撞，让经典思想活起来。',
-    content: '本期主题：人性本善还是本恶？\n正方：孟子——"恻隐之心，人皆有之"\n反方：荀子——"人之性恶，其善者伪也"',
-    work_type: 'video',
-    status: 'published',
-    cover_url: '',
-    file_url: '',
-    created_at: '2025-03-28T08:30:00Z',
-    updated_at: '2025-03-28T08:30:00Z',
-  },
-  {
-    id: 7,
-    user_id: 1,
-    title: '汉字的演变——动画',
-    description: '以动画形式生动展现汉字从甲骨文到楷书的演变历程，让文字活起来。',
-    content: '本视频通过精美的动画，展现了汉字从甲骨文、金文、小篆、隶书到楷书的演变过程，让观众直观感受汉字之美。',
-    work_type: 'video',
-    status: 'published',
-    cover_url: '',
-    file_url: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/video/%E6%B1%89%E5%AD%97%E7%9A%84%E6%BC%94%E5%8F%98-%E5%8A%A8%E7%94%BB.mp4',
-    created_at: '2025-04-29T10:00:00Z',
-    updated_at: '2025-04-29T10:00:00Z',
-  },
-  {
-    id: 8,
-    user_id: 1,
-    title: '汉字的演变——科普',
-    description: '科普讲解汉字的起源与演变，深入浅出地介绍汉字文化。',
-    content: '本视频以科普视角讲解汉字的起源，从仓颉造字的传说到甲骨文的发现，再到现代汉字的规范化，系统梳理汉字发展的历史脉络。',
-    work_type: 'video',
-    status: 'published',
-    cover_url: '',
-    file_url: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/video/%E6%B1%89%E5%AD%97%E7%9A%84%E6%BC%94%E5%8F%98-%E7%A7%91%E6%99%AE.mp4',
-    created_at: '2025-04-29T10:00:00Z',
-    updated_at: '2025-04-29T10:00:00Z',
-  },
-  {
-    id: 9,
-    user_id: 1,
-    title: '《诗经》导读',
-    description: '走进中国第一部诗歌总集，感受三千年前的先民情怀。',
-    content: '本视频带领观众走进《诗经》的世界，从"关关雎鸠"到"蒹葭苍苍"，感受先秦时期的风雅颂，体会先民的情感与智慧。',
-    work_type: 'video',
-    status: 'published',
-    cover_url: '',
-    file_url: 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/video/%E8%AF%97%E7%BB%8F.mp4',
-    created_at: '2025-04-29T10:00:00Z',
-    updated_at: '2025-04-29T10:00:00Z',
-  },
-]
-
 const Exhibition: React.FC = () => {
+  const { user } = useAuthStore()
+  const isAdmin = user?.role === 'admin'
+
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
   const [activeType, setActiveType] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('latest')
   const [selectedWork, setSelectedWork] = useState<Work | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [voteSettings, setVoteSettings] = useState({ is_voting_open: false })
+  const [comments, setComments] = useState<WorkComment[]>([])
+  const [commentInput, setCommentInput] = useState('')
+  const [commentsLoading, setCommentsLoading] = useState(false)
 
   useEffect(() => {
     fetchWorks()
-  }, [activeType])
+    fetchVoteSettings()
+  }, [activeType, sortBy])
 
   const fetchWorks = async () => {
     setLoading(true)
     try {
       const typeParam = activeType === 'all' ? undefined : activeType
-      const res = await listWorks(typeParam)
+      const res = await listWorks(typeParam, sortBy)
       const published = res.data.filter((w: Work) => w.status === 'published')
-      const mockFiltered = activeType === 'all'
-        ? MOCK_WORKS
-        : MOCK_WORKS.filter(w => w.work_type === activeType)
-      const merged = [...mockFiltered, ...published]
-      const deduped = merged.filter((w, idx, arr) =>
-        arr.findIndex(item => item.id === w.id) === idx
-      )
-      setWorks(deduped)
+      setWorks(published)
     } catch (err) {
       console.error('Failed to load works:', err)
-      const filtered = activeType === 'all'
-        ? MOCK_WORKS
-        : MOCK_WORKS.filter(w => w.work_type === activeType)
-      setWorks(filtered)
+      setWorks([])
     } finally {
       setLoading(false)
     }
   }
 
-  const handleViewDetail = async (work: Work) => {
-    // If it's a mock work, skip API call
-    const mockWork = MOCK_WORKS.find(w => w.id === work.id)
-    if (mockWork) {
-      setSelectedWork(mockWork)
-      setDetailVisible(true)
-      return
+  const handlePin = async (e: React.MouseEvent, work: Work) => {
+    e.stopPropagation()
+    try {
+      await pinWork(work.id)
+      fetchWorks()
+      message.success(work.is_pinned ? '已取消置顶' : '已置顶')
+    } catch {
+      message.error('操作失败')
     }
+  }
 
+  const handleUnlist = async (e: React.MouseEvent, work: Work) => {
+    e.stopPropagation()
+    try {
+      await unlistWork(work.id)
+      fetchWorks()
+      message.success(work.is_unlisted ? '已重新上架' : '已下架')
+    } catch {
+      message.error('操作失败')
+    }
+  }
+
+  const handleLike = async (e: React.MouseEvent, work: Work) => {
+    e.stopPropagation()
+    try {
+      const res = await likeWork(work.id)
+      setWorks(prev => prev.map(w =>
+        w.id === work.id
+          ? { ...w, like_count: res.data.like_count, user_liked: res.data.liked }
+          : w
+      ))
+      if (selectedWork && selectedWork.id === work.id) {
+        setSelectedWork({ ...selectedWork, like_count: res.data.like_count, user_liked: res.data.liked })
+      }
+    } catch {
+      message.error('点赞失败')
+    }
+  }
+
+  const fetchVoteSettings = async () => {
+    try {
+      const res = await getVoteSettings()
+      setVoteSettings(res.data)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleToggleVoting = async (checked: boolean) => {
+    try {
+      await updateVoteSettings(checked)
+      setVoteSettings({ is_voting_open: checked })
+      message.success(checked ? '投票已开启' : '投票已关闭')
+    } catch {
+      message.error('操作失败')
+    }
+  }
+
+  const handleVote = async (awardType: string) => {
+    if (!selectedWork) return
+    try {
+      await voteWork(selectedWork.id, awardType)
+      const res = await getWork(selectedWork.id)
+      setSelectedWork(res.data)
+      message.success('投票成功')
+    } catch (err: any) {
+      message.error(err.response?.data?.detail || '投票失败')
+    }
+  }
+
+  const fetchComments = async (workId: number) => {
+    setCommentsLoading(true)
+    try {
+      const res = await getWorkComments(workId)
+      setComments(res.data)
+    } catch {
+      setComments([])
+    } finally {
+      setCommentsLoading(false)
+    }
+  }
+
+  const handleCommentSubmit = async () => {
+    if (!selectedWork || !commentInput.trim()) return
+    try {
+      await createWorkComment(selectedWork.id, commentInput.trim())
+      setCommentInput('')
+      fetchComments(selectedWork.id)
+      message.success('评论发表成功')
+    } catch {
+      message.error('评论发表失败')
+    }
+  }
+
+  const handleCommentDelete = async (commentId: number) => {
+    if (!selectedWork) return
+    try {
+      await deleteWorkComment(selectedWork.id, commentId)
+      fetchComments(selectedWork.id)
+      message.success('评论已删除')
+    } catch {
+      message.error('删除失败')
+    }
+  }
+
+  const handleViewDetail = async (work: Work) => {
     setDetailLoading(true)
     try {
       const res = await getWork(work.id)
       setSelectedWork(res.data)
       setDetailVisible(true)
+      fetchComments(work.id)
     } catch (err) {
       message.error('加载详情失败')
     } finally {
@@ -250,6 +240,17 @@ const Exhibition: React.FC = () => {
             <Text className="text-danmo text-base block">
               展示同学们的创作成果，灵感碰撞的公共空间
             </Text>
+            {isAdmin && (
+              <div className="mt-4 flex items-center justify-center gap-3 bg-white/70 backdrop-blur-sm px-5 py-2 rounded-full border border-danmo-light shadow-sm inline-flex">
+                <span className="text-sm text-mohei">投票评比</span>
+                <Switch
+                  checked={voteSettings.is_voting_open}
+                  onChange={handleToggleVoting}
+                  checkedChildren="开启"
+                  unCheckedChildren="关闭"
+                />
+              </div>
+            )}
           </div>
 
           {/* Stats Bar */}
@@ -267,19 +268,31 @@ const Exhibition: React.FC = () => {
             ))}
           </div>
 
-          {/* Tabs */}
-          <Tabs
-            activeKey={activeType}
-            onChange={setActiveType}
-            className="mb-8"
-            centered
-            size="large"
-          >
-            <TabPane tab={<span className="px-2">全部作品</span>} key="all" />
-            <TabPane tab={<span className="flex items-center gap-1.5 px-2"><PlayCircleOutlined /> 视频</span>} key="video" />
-            <TabPane tab={<span className="flex items-center gap-1.5 px-2"><AudioOutlined /> 音频</span>} key="audio" />
-            <TabPane tab={<span className="flex items-center gap-1.5 px-2"><FileTextOutlined /> 脚本</span>} key="script" />
-          </Tabs>
+          {/* Sort + Tabs */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            <Tabs
+              activeKey={activeType}
+              onChange={setActiveType}
+              centered
+              size="large"
+              className="flex-1"
+            >
+              <TabPane tab={<span className="px-2">全部作品</span>} key="all" />
+              <TabPane tab={<span className="flex items-center gap-1.5 px-2"><PlayCircleOutlined /> 视频</span>} key="video" />
+              <TabPane tab={<span className="flex items-center gap-1.5 px-2"><AudioOutlined /> 音频</span>} key="audio" />
+              <TabPane tab={<span className="flex items-center gap-1.5 px-2"><FileTextOutlined /> 脚本</span>} key="script" />
+            </Tabs>
+            <Select
+              value={sortBy}
+              onChange={setSortBy}
+              options={[
+                { value: 'latest', label: '最新发布' },
+                { value: 'hottest', label: <span className="flex items-center gap-1"><FireOutlined /> 最热</span> },
+                { value: 'most_liked', label: <span className="flex items-center gap-1"><LikeOutlined /> 最多赞</span> },
+              ]}
+              className="w-36"
+            />
+          </div>
 
           {/* Works Grid */}
           {works.length === 0 ? (
@@ -312,8 +325,17 @@ const Exhibition: React.FC = () => {
                     {work.work_type === 'video' && (
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                          <PlayOutlined className="text-xl text-zhusha ml-0.5" />
+                          <CaretRightOutlined className="text-xl text-zhusha ml-0.5" />
                         </div>
+                      </div>
+                    )}
+
+                    {/* Pin badge */}
+                    {work.is_pinned && (
+                      <div className="absolute top-3 left-3">
+                        <Tag color="#C73E3A" className="px-2 py-0.5 text-xs font-medium border-0 flex items-center gap-1">
+                          <PushpinOutlined /> 置顶
+                        </Tag>
                       </div>
                     )}
 
@@ -336,13 +358,39 @@ const Exhibition: React.FC = () => {
                       </Text>
                     )}
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1.5 text-danmo">
-                        <UserOutlined />
-                        <span>用户 {work.user_id}</span>
+                      <div className="flex items-center gap-3 text-danmo">
+                        <span className="flex items-center gap-1">
+                          <EyeOutlined /> {work.view_count}
+                        </span>
+                        <button
+                          onClick={(e) => handleLike(e, work)}
+                          className={`flex items-center gap-1 transition-colors ${work.user_liked ? 'text-zhusha' : 'hover:text-zhusha'}`}
+                        >
+                          {work.user_liked ? <LikeFilled /> : <LikeOutlined />}
+                          {work.like_count}
+                        </button>
                       </div>
-                      <div className="flex items-center gap-1 text-zhusha font-medium">
-                        <EyeOutlined />
-                        <span>查看详情</span>
+                      <div className="flex items-center gap-3">
+                        {isAdmin && (
+                          <>
+                            <button
+                              onClick={(e) => handlePin(e, work)}
+                              className={`text-xs px-2 py-1 rounded-md transition-colors ${work.is_pinned ? 'bg-zhusha/10 text-zhusha' : 'bg-gray-100 text-danmo hover:bg-gray-200'}`}
+                            >
+                              <PushpinOutlined /> {work.is_pinned ? '取消置顶' : '置顶'}
+                            </button>
+                            <button
+                              onClick={(e) => handleUnlist(e, work)}
+                              className={`text-xs px-2 py-1 rounded-md transition-colors ${work.is_unlisted ? 'bg-shiqing/10 text-shiqing' : 'bg-gray-100 text-danmo hover:bg-gray-200'}`}
+                            >
+                              <DeleteOutlined /> {work.is_unlisted ? '上架' : '下架'}
+                            </button>
+                          </>
+                        )}
+                        <div className="flex items-center gap-1 text-zhusha font-medium">
+                          <EyeOutlined />
+                          <span>查看详情</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -371,7 +419,7 @@ const Exhibition: React.FC = () => {
             <Spin size="large" />
           </div>
         ) : selectedWork ? (
-          <div className="space-y-5">
+          <div className="space-y-5 max-h-[80vh] overflow-y-auto pr-1">
             {/* Modal Header */}
             <div className="border-b border-danmo-light pb-4">
               <div className="flex items-center gap-2 mb-2">
@@ -383,9 +431,18 @@ const Exhibition: React.FC = () => {
                   {new Date(selectedWork.created_at).toLocaleDateString()}
                 </Text>
               </div>
-              <Title level={4} className="font-display !mb-0">
-                {selectedWork.title}
-              </Title>
+              <div className="flex items-center justify-between">
+                <Title level={4} className="font-display !mb-0">
+                  {selectedWork.title}
+                </Title>
+                <button
+                  onClick={() => handleLike({ stopPropagation: () => {} } as any, selectedWork)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${selectedWork.user_liked ? 'bg-zhusha/10 text-zhusha' : 'bg-gray-100 text-danmo hover:bg-gray-200'}`}
+                >
+                  {selectedWork.user_liked ? <LikeFilled /> : <LikeOutlined />}
+                  <span className="font-medium">{selectedWork.like_count}</span>
+                </button>
+              </div>
             </div>
 
             {/* Description */}
@@ -425,6 +482,107 @@ const Exhibition: React.FC = () => {
                 </pre>
               </div>
             )}
+
+            {/* Voting Section */}
+            {voteSettings.is_voting_open && (
+              <div className="bg-white p-5 rounded-xl border border-danmo-light/40">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrophyOutlined className="text-tenghuang" />
+                  <Title level={5} className="!mb-0 font-display">投票评比</Title>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { key: 'best_video', label: '最佳视频奖', icon: <PlayCircleOutlined /> },
+                    { key: 'best_audio', label: '最佳音频奖', icon: <AudioOutlined /> },
+                    { key: 'best_script', label: '最佳脚本奖', icon: <FileTextOutlined /> },
+                  ].map((award) => {
+                    const typeMap: Record<string, string> = { best_video: 'video', best_audio: 'audio', best_script: 'script' }
+                    const isMatch = selectedWork.work_type === typeMap[award.key]
+                    const count = selectedWork.vote_counts?.[award.key] || 0
+                    return (
+                      <button
+                        key={award.key}
+                        onClick={() => isMatch && handleVote(award.key)}
+                        disabled={!isMatch}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors ${
+                          isMatch
+                            ? 'border-tenghuang bg-tenghuang/5 hover:bg-tenghuang/10 cursor-pointer'
+                            : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <span className="text-lg">{award.icon}</span>
+                        <span className="text-sm font-medium">{award.label}</span>
+                        <span className="text-xs text-danmo">{count} 票</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Comments Section */}
+            <div className="bg-white p-5 rounded-xl border border-danmo-light/40">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageOutlined className="text-shiqing" />
+                <Title level={5} className="!mb-0 font-display">留言</Title>
+                <span className="text-sm text-danmo">({comments.length})</span>
+              </div>
+
+              {/* Comment Input */}
+              <div className="flex gap-2 mb-4">
+                <Input.TextArea
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="写下你的留言..."
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                  className="flex-1"
+                />
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={handleCommentSubmit}
+                  disabled={!commentInput.trim()}
+                >
+                  发表
+                </Button>
+              </div>
+
+              {/* Comment List */}
+              {commentsLoading ? (
+                <div className="flex justify-center py-4">
+                  <Spin size="small" />
+                </div>
+              ) : comments.length === 0 ? (
+                <Text className="text-danmo text-sm block text-center py-4">暂无留言，快来抢沙发吧！</Text>
+              ) : (
+                <div className="space-y-3">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3 p-3 bg-xuanzhi-warm/30 rounded-lg">
+                      <Avatar className="bg-shiqing text-white flex-shrink-0">
+                        {comment.username?.[0] || 'U'}
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium text-mohei">{comment.username}</span>
+                          <span className="text-xs text-danmo flex-shrink-0">
+                            {new Date(comment.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-mohei mt-1">{comment.content}</p>
+                      </div>
+                      {(isAdmin || comment.user_id === user?.id) && (
+                        <button
+                          onClick={() => handleCommentDelete(comment.id)}
+                          className="text-xs text-danmo hover:text-zhusha transition-colors flex-shrink-0"
+                        >
+                          删除
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
       </Modal>
