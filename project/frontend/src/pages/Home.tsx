@@ -162,7 +162,7 @@ const Home: React.FC = () => {
       <div className="relative -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
-          style={{ backgroundImage: 'url(/images/backgrounds/home.png)' }}
+          style={{ backgroundImage: 'url(/images/backgrounds/home.webp)' }}
         />
         <div className="relative z-10 space-y-6 stagger-children">
         {/* Carousel */}
