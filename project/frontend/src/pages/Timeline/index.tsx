@@ -15,6 +15,7 @@ import {
   StarOutlined,
   FireOutlined,
   ReadOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
@@ -34,6 +35,7 @@ interface TimelineNode {
   key_points: string[]
   sort_order: number
   image_url?: string
+  video_urls?: string[]
 }
 
 const eraIcons: Record<string, React.ReactNode> = {
@@ -703,6 +705,32 @@ const TimelinePage: React.FC = () => {
                           </Popover>
                         )
                       })}
+                    </div>
+                  )}
+                  {selectedNode.video_urls && selectedNode.video_urls.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <Text className="font-medium text-mohei flex items-center gap-2">
+                        <VideoCameraOutlined className="text-zhusha" />
+                        相关视频
+                      </Text>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedNode.video_urls.map((url, idx) => {
+                          const [bvid, pageStr] = url.split('&')
+                          const page = pageStr ? pageStr.replace('page=', '') : '1'
+                          return (
+                            <div key={idx} className="rounded-lg overflow-hidden border border-danmo-light bg-black">
+                              <iframe
+                                src={`https://player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&danmaku=0`}
+                                scrolling="no"
+                                frameBorder={0}
+                                allowFullScreen
+                                className="w-full"
+                                style={{ height: '220px' }}
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>

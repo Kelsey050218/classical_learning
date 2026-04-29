@@ -12,3 +12,4 @@ class TimelineNode(BaseModel):
     key_points = Column(JSON, nullable=True)           # 关键知识点列表
     sort_order = Column(Integer, default=0)            # 排序
     image_url = Column(String(500), nullable=True)
+    video_urls = Column(JSON, nullable=True)

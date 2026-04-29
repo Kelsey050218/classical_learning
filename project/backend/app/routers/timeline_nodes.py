@@ -31,6 +31,7 @@ def list_timeline_nodes(
             "key_points": node.key_points or [],
             "sort_order": node.sort_order,
             "image_url": node.image_url,
+            "video_urls": node.video_urls or [],
             "created_at": node.created_at.isoformat() if node.created_at else None,
             "updated_at": node.updated_at.isoformat() if node.updated_at else None,
         })
@@ -62,6 +63,7 @@ def get_timeline_node(
         "key_points": node.key_points or [],
         "sort_order": node.sort_order,
         "image_url": node.image_url,
+        "video_urls": node.video_urls or [],
         "created_at": node.created_at.isoformat() if node.created_at else None,
         "updated_at": node.updated_at.isoformat() if node.updated_at else None,
     }

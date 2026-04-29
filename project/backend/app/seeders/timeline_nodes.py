@@ -17,7 +17,8 @@ def seed_timeline_nodes():
                 "《楚辞》：浪漫主义源头，屈原《离骚》开创骚体"
             ],
             "sort_order": 1,
-            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/xianqin.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/xianqin.png",
+            "video_urls": ["BV1m84y1p7yd"]
         },
         {
             "era": "汉代",
@@ -29,7 +30,8 @@ def seed_timeline_nodes():
                 "古诗十九首：五言冠冕，文人诗开端"
             ],
             "sort_order": 2,
-            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/han.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/han.png",
+            "video_urls": ["BV1B121BGEAf&page=3", "BV1B121BGEAf&page=13"]
         },
         {
             "era": "魏晋南北朝",
@@ -54,7 +56,8 @@ def seed_timeline_nodes():
                 "李白（浪漫）、杜甫（写实）、白居易（新乐府）"
             ],
             "sort_order": 4,
-            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/tang.png"
+            "image_url": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/timeline/tang.png",
+            "video_urls": ["BV1GqWezbEK1", "BV1Mr4y1N7EM"]
         },
         {
             "era": "宋代",

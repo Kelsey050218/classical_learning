@@ -9,6 +9,7 @@ export interface TimelineNode {
   key_points: string[]
   sort_order: number
   image_url?: string
+  video_urls?: string[]
   created_at: string
   updated_at: string
 }
