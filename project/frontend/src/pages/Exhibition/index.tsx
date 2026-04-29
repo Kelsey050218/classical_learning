@@ -223,10 +223,10 @@ const Exhibition: React.FC = () => {
       <div className="relative -mx-4 -my-6 px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[calc(100vh-4rem)]">
         {/* Background */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.12] pointer-events-none"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/exhibition.png)' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F2EB]/60 via-transparent to-[#F5F2EB]/80 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-gradient-to-b from-[#F5F2EB]/60 via-transparent to-[#F5F2EB]/80 pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto">
           {/* Header */}
