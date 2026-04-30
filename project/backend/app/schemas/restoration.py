@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 # Chapter schemas
@@ -26,8 +26,7 @@ class ChapterOut(ChapterBase):
     image_url: Optional[str]
     positioning: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Fragment schemas
@@ -36,8 +35,7 @@ class FragmentOut(BaseModel):
     content: str
     category: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Diagnostic schemas
@@ -48,8 +46,7 @@ class DiagnosticOut(BaseModel):
     options: Optional[List[str]]
     sort_order: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DiagnosticSubmit(BaseModel):
@@ -67,8 +64,7 @@ class NodeOut(BaseModel):
     content: str
     sort_order: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NodeSubmit(BaseModel):
@@ -101,8 +97,7 @@ class ProgressOut(BaseModel):
     sequencing_completed: bool
     archive_completed: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Note schemas
@@ -114,8 +109,7 @@ class NoteOut(BaseModel):
     chapter_id: int
     note: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Archive schemas
