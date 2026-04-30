@@ -35,6 +35,10 @@ from app.models.work_vote import WorkVote  # Import to ensure table is created
 from app.models.work_comment import WorkComment  # Import to ensure table is created
 from app.models.vote_settings import VoteSettings  # Import to ensure table is created
 from app.models.notification import Notification  # Import to ensure table is created
+from app.models.restoration import (
+    RestorationChapter, RestorationFragment, RestorationDiagnostic,
+    RestorationNode, RestorationProgress, RestorationNote,
+)  # Import to ensure table is created
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
