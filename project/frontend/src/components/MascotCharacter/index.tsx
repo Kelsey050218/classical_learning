@@ -29,7 +29,7 @@ const MascotCharacter: React.FC = () => {
 
   const { position, isDragging, wasDragged, handlers } = useDrag({
     x: 0,
-    y: window.innerHeight - 252,
+    y: window.innerHeight - 340,
   })
 
   useEffect(() => {
@@ -171,7 +171,13 @@ const MascotCharacter: React.FC = () => {
         onClick={handleClick}
         title="AI 学习助手"
       >
-        <div className={`mascot-sprite ${isDragging ? 'dragging' : 'idle'}`} />
+        <div className={`mascot-sprite ${isDragging ? 'dragging' : 'idle'}`}>
+          <img
+            src="/images/mascot_character.png"
+            alt="AI 学习助手"
+            draggable={false}
+          />
+        </div>
       </div>
 
       {/* Chat Drawer */}
@@ -179,7 +185,7 @@ const MascotCharacter: React.FC = () => {
         title={
           <div className="flex items-center gap-2">
             <img
-              src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/mascot_avatar.png"
+              src="/images/mascot_character.png"
               alt="AI 学习助手"
               className="w-6 h-6 rounded-full flex-shrink-0 object-cover"
             />
@@ -221,7 +227,7 @@ const MascotCharacter: React.FC = () => {
                     <UserOutlined className="text-sm" />
                   ) : (
                     <img
-                      src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/mascot_avatar.png"
+                      src="/images/mascot_character.png"
                       alt="AI"
                       className="w-full h-full object-cover"
                     />
@@ -242,7 +248,7 @@ const MascotCharacter: React.FC = () => {
               <div className="flex gap-2">
                 <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                   <img
-                    src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/mascot_avatar.png"
+                    src="/images/mascot_character.png"
                     alt="AI"
                     className="w-full h-full object-cover"
                   />
