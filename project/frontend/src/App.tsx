@@ -17,6 +17,9 @@ const VideoEdit = React.lazy(() => import('./pages/VideoEdit'))
 const ReadingCards = React.lazy(() => import('./pages/ReadingCards'))
 const Challenges = React.lazy(() => import('./pages/Challenges'))
 const CheckIn = React.lazy(() => import('./pages/CheckIn'))
+const RestorationHall = React.lazy(() => import('./pages/Restoration'))
+const ChapterRepair = React.lazy(() => import('./pages/Restoration/ChapterRepair'))
+const ArchiveHall = React.lazy(() => import('./pages/Restoration/ArchiveHall'))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -138,6 +141,30 @@ function App() {
           element={
             <ProtectedRoute>
               <CheckIn />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/restoration"
+          element={
+            <ProtectedRoute>
+              <RestorationHall />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/restoration/archive"
+          element={
+            <ProtectedRoute>
+              <ArchiveHall />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/restoration/:chapterId"
+          element={
+            <ProtectedRoute>
+              <ChapterRepair />
             </ProtectedRoute>
           }
         />

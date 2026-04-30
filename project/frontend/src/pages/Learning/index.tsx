@@ -14,6 +14,7 @@ import {
   FileTextOutlined,
   AudioOutlined,
   MessageOutlined,
+  BuildOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
@@ -31,6 +32,7 @@ const projectIcons: Record<string, React.ReactNode> = {
 
 const subProjectIcons: Record<string, React.ReactNode> = {
   timeline: <HistoryOutlined />,
+  restoration: <BuildOutlined />,
   forum: <TeamOutlined />,
   ai_script: <FileTextOutlined />,
   audio: <AudioOutlined />,
