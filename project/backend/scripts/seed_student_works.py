@@ -4,10 +4,22 @@ import os
 # 将backend目录加入路径，以便导入app模块
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+from datetime import datetime
+import random
+import string
+
 from app.config.database import SessionLocal
 from app.models.user import User, UserRole
 from app.models.work import Work, WorkType, WorkStatus
+from app.models.chapter import Chapter  # noqa: F401 - register in metadata for FK resolution
 from app.utils.security import get_password_hash
+
+
+def generate_student_id() -> str:
+    """Generate a unique student ID in format STU + 8 digits."""
+    timestamp = datetime.now().strftime("%Y%m%d")
+    random_suffix = ''.join(random.choices(string.digits, k=4))
+    return f"STU{timestamp}{random_suffix}"
 
 
 STUDENTS = [
@@ -61,10 +73,16 @@ def seed():
                 created_users.append(existing)
                 continue
 
+            # Generate unique student_id
+            student_id = generate_student_id()
+            while db.query(User).filter(User.student_id == student_id).first():
+                student_id = generate_student_id()
+
             user = User(
                 username=student["username"],
                 password_hash=get_password_hash(PASSWORD),
                 real_name=student["real_name"],
+                student_id=student_id,
                 role=UserRole.student,
             )
             db.add(user)
