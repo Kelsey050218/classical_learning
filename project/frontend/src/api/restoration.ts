@@ -24,6 +24,7 @@ export interface Diagnostic {
   content: string
   options?: string[]
   sort_order: number
+  hint?: string
 }
 
 export interface Node {

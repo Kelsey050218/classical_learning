@@ -45,6 +45,7 @@ class DiagnosticOut(BaseModel):
     content: str
     options: Optional[List[str]]
     sort_order: int
+    hint: str
 
     model_config = ConfigDict(from_attributes=True)
 
