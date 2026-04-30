@@ -8,14 +8,6 @@ export interface ClassicWork {
   zhuQuote: string;
 }
 
-export interface StreamConnection {
-  id: string;
-  fromEraId: string;
-  toEraId: string;
-  label: string;
-  zhuEvidence: string;
-}
-
 export interface TimelineEra {
   id: string;
   name: string;
@@ -260,71 +252,3 @@ export const TIMELINE_ERAS: TimelineEra[] = [
   },
 ];
 
-export const STREAM_CONNECTIONS: StreamConnection[] = [
-  {
-    id: 'conn-1',
-    fromEraId: 'xianqin',
-    toEraId: 'han',
-    label: '《诗经》→汉乐府',
-    zhuEvidence: '汉武帝立乐府，采集代、赵、秦、楚的歌谣和乐谱。这些歌谣，后来称为"乐府诗"。',
-  },
-  {
-    id: 'conn-2',
-    fromEraId: 'xianqin',
-    toEraId: 'tang',
-    label: '《诗经》→唐诗',
-    zhuEvidence: '诗、词、曲，一脉相承，构成了中国古典诗歌的灿烂长河。',
-  },
-  {
-    id: 'conn-3',
-    fromEraId: 'han',
-    toEraId: 'weijin',
-    label: '《史记》→魏晋文史',
-    zhuEvidence: '司马迁不仅记录了历史事件，还描写了许多栩栩如生的人物。他的文字，生动活泼，富于感情。',
-  },
-  {
-    id: 'conn-4',
-    fromEraId: 'weijin',
-    toEraId: 'tang',
-    label: '古诗十九首→近体诗',
-    zhuEvidence: '到了唐代，诗歌发展到了顶峰。唐代诗人辈出，名家如云。',
-  },
-  {
-    id: 'conn-5',
-    fromEraId: 'xianqin',
-    toEraId: 'weijin',
-    label: '《周易》→玄学',
-    zhuEvidence: '战国末期，道家、阴阳家学说盛行，儒家受他们的影响，给《周易》的卦、爻辞作了种种新的解释。',
-  },
-  {
-    id: 'conn-6',
-    fromEraId: 'han',
-    toEraId: 'song',
-    label: '《三礼》→理学',
-    zhuEvidence: '《大学》原是《礼记》中的一篇。朱熹把它抽出来，列为四书之首。',
-  },
-  {
-    id: 'conn-7',
-    fromEraId: 'tang',
-    toEraId: 'song',
-    label: '唐诗→宋词',
-    zhuEvidence: '诗到唐代，已经达到了顶峰。后人作诗，很难超越唐人。所以宋人另辟蹊径，发展词体。',
-  },
-  {
-    id: 'conn-8',
-    fromEraId: 'song',
-    toEraId: 'yuan',
-    label: '宋词→元曲',
-    zhuEvidence: '元代，曲又兴起了。诗、词、曲，一脉相承，构成了中国古典诗歌的灿烂长河。',
-  },
-];
-
-export function getEraById(id: string): TimelineEra | undefined {
-  return TIMELINE_ERAS.find(e => e.id === id);
-}
-
-export function getConnectionsForEra(eraId: string): StreamConnection[] {
-  return STREAM_CONNECTIONS.filter(
-    c => c.fromEraId === eraId || c.toEraId === eraId
-  );
-}

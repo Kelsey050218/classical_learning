@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Typography, Spin, Empty, Card as AntCard, Button, Input, Radio, message, Badge, Modal } from 'antd'
-import { MessageOutlined, LikeOutlined, DislikeOutlined, FireOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { MessageOutlined, LikeOutlined, DislikeOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import EvaluationForm from '../../components/EvaluationForm'
 import { listTopics, listPosts, createPost, votePost } from '../../api/forum'

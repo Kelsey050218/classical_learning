@@ -76,10 +76,10 @@ interface ParagraphInfo {
 }
 
 const ANNOTATION_TYPES = [
-  { key: 'mark', label: '圈点勾画法', color: 'bg-[#8B6914] text-white', symbol: '○' },
-  { key: 'question', label: '质疑问难法', color: 'bg-[#4A5568] text-white', symbol: '?' },
-  { key: 'connection', label: '联想拓展法', color: 'bg-[#2B6CB0] text-white', symbol: '→' },
-  { key: 'insight', label: '感悟评点法', color: 'bg-[#C73E3A] text-white', symbol: '★' },
+  { key: 'mark', label: '圈点勾画法', color: 'bg-[#8B6914] text-white', symbol: '○', desc: '用符号标记关键词、重点句和结构线，快速定位核心内容' },
+  { key: 'question', label: '质疑问难法', color: 'bg-[#4A5568] text-white', symbol: '?', desc: '敢于质疑，记录疑问、原文观点、个人判断与求证过程' },
+  { key: 'connection', label: '联想拓展法', color: 'bg-[#2B6CB0] text-white', symbol: '→', desc: '由文本触发联想，建立与自身、古今、他作或知识网络的联系' },
+  { key: 'insight', label: '感悟评点法', color: 'bg-[#C73E3A] text-white', symbol: '★', desc: '记录情感反应、价值判断、审美品味和哲理升华' },
 ]
 
 const SYMBOL_OPTIONS = [
@@ -895,6 +895,9 @@ const Reading: React.FC = () => {
             </Radio.Button>
           ))}
         </Radio.Group>
+        <Text className="text-xs text-danmo mt-2 block">
+          {ANNOTATION_TYPES.find(t => t.key === annotationType)?.desc}
+        </Text>
       </div>
 
       {annotationType === 'mark' && (
@@ -1604,8 +1607,9 @@ const Reading: React.FC = () => {
                 key: 'quiz',
                 label: '闯关答题',
                 children: (
-                  <Card>
-                    {!isCompleted ? (
+                  <>
+                    <Card>
+                      {!isCompleted ? (
                       <Empty description="请先读完本章，解锁闯关答题" />
                     ) : quizResult ? (
                       <div className="space-y-6 animate-fade-in-up">
@@ -1763,6 +1767,19 @@ const Reading: React.FC = () => {
                       </div>
                     )}
                   </Card>
+                    <div className="mt-6">
+                      <video
+                        controls
+                        className="w-full rounded-lg"
+                        poster="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/video/%E6%94%BE%E5%9C%A8%E9%A1%B9%E7%9B%AE%E5%8C%96%E5%AD%A6%E4%B9%A0%E7%9A%84%E7%9F%A5%E8%AF%86%E9%97%AF%E5%85%B3%E7%9A%84%E6%A0%8F%E7%9B%AE.mp4?x-oss-process=video/snapshot,t_0,f_jpg"
+                      >
+                        <source
+                          src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/video/%E6%94%BE%E5%9C%A8%E9%A1%B9%E7%9B%AE%E5%8C%96%E5%AD%A6%E4%B9%A0%E7%9A%84%E7%9F%A5%E8%AF%86%E9%97%AF%E5%85%B3%E7%9A%84%E6%A0%8F%E7%9B%AE.mp4"
+                          type="video/mp4"
+                        />
+                      </video>
+                    </div>
+                  </>
                 ),
               },
               {

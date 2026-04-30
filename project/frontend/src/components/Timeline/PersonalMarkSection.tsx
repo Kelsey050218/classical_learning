@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { ClassicWork } from '../../data/timelineEras';
 import type { EraPersonalMark } from '../../hooks/useTimelineMarks';
 
@@ -16,6 +16,10 @@ const PersonalMarkSection: React.FC<PersonalMarkSectionProps> = ({
   onChange,
 }) => {
   const [localUnderstanding, setLocalUnderstanding] = useState(mark?.myUnderstanding || '');
+
+  useEffect(() => {
+    setLocalUnderstanding(mark?.myUnderstanding || '');
+  }, [mark?.myUnderstanding]);
 
   const handleFavoriteChange = (workId: string) => {
     const next = mark?.favoriteWorkId === workId ? undefined : workId;
@@ -38,6 +42,7 @@ const PersonalMarkSection: React.FC<PersonalMarkSectionProps> = ({
               <button
                 key={work.id}
                 onClick={() => handleFavoriteChange(work.id)}
+                aria-pressed={isSelected}
                 className="px-3 py-1.5 rounded border text-sm transition-all"
                 style={{
                   borderColor: isSelected ? '#A52A2A' : '#D4A574',

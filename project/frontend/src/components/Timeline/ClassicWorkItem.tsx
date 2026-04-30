@@ -15,8 +15,18 @@ const ClassicWorkItem: React.FC<ClassicWorkItemProps> = ({ work }) => {
     navigate(`/reading?chapter=${work.chapterId}`);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleRead();
+    }
+  };
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${work.name}，${work.positioning}`}
       className="relative rounded-lg border border-[#D4A574]/50 bg-white/80 p-4 transition-all cursor-pointer hover:shadow-md"
       style={{
         boxShadow: isHovered ? '0 4px 12px rgba(139, 69, 19, 0.12)' : 'none',
@@ -24,6 +34,7 @@ const ClassicWorkItem: React.FC<ClassicWorkItemProps> = ({ work }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleRead}
+      onKeyDown={handleKeyDown}
     >
       {/* Alias tag */}
       <span className="inline-block text-xs px-2 py-0.5 rounded bg-[#A52A2A]/10 text-[#A52A2A] mb-2">

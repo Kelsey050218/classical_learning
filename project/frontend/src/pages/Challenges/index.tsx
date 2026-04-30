@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Typography, Button, message, Spin, Empty, Card as AntCard, Tag, Radio, Input } from 'antd'
-import { TrophyOutlined, CheckCircleOutlined, FireOutlined } from '@ant-design/icons'
+import { CheckCircleOutlined, FireOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import { listQuizzes, getQuizQuestions, submitQuiz, Quiz, Question, QuizResult } from '../../api/quizzes'
 
