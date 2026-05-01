@@ -4,7 +4,7 @@ const VIDEO_URL = 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianc
 
 const VideoBanner: React.FC = () => {
   return (
-    <div className="rounded-lg overflow-hidden shadow-card relative">
+    <div className="rounded-lg overflow-hidden shadow-card relative bg-black">
       <div className="aspect-[16/7] md:aspect-[16/6] lg:aspect-[16/5] w-full">
         <video
           src={VIDEO_URL}
@@ -12,7 +12,8 @@ const VideoBanner: React.FC = () => {
           muted
           loop
           playsInline
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover opacity-100"
+          style={{ opacity: 1 }}
         />
       </div>
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-8 px-6">
