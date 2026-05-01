@@ -70,10 +70,11 @@ const RestorationHall: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 py-8 relative">
         {/* Background - same as Learning center */}
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none -z-10"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
 
+        <div className="relative z-10">
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/learning')}
@@ -186,6 +187,7 @@ const RestorationHall: React.FC = () => {
             })}
           </div>
         )}
+        </div>
       </div>
     </Layout>
   )
