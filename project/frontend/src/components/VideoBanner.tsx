@@ -16,11 +16,8 @@ const VideoBanner: React.FC = () => {
           style={{ opacity: 1 }}
         />
       </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-8 px-6">
-        <h3 className="text-white text-xl md:text-2xl font-display font-semibold">
-          动态翻页效果展示
-        </h3>
-      </div>
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-8 px-6" />
+
     </div>
   )
 }
