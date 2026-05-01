@@ -172,7 +172,7 @@ const Home: React.FC = () => {
         <Card variant="paper" className="relative overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-[0.12] pointer-events-none"
-            style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/356af16b2f83825e905314411a9ad408.jpg)' }}
+            style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/%E7%94%9F%E6%88%90%E6%A8%AA%E5%B9%85%E5%9B%BE%E7%89%87.png)' }}
           />
           <div className="absolute top-0 right-0 w-40 h-40 bg-zhusha-100 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 blur-2xl" />
           <div className="relative z-10">

@@ -10,7 +10,6 @@ import {
   MinusCircleOutlined,
   BookOutlined,
   EditOutlined,
-  PushpinOutlined,
   MenuFoldOutlined,
   PlusOutlined,
   SettingOutlined,
@@ -39,7 +38,6 @@ import { getCheckInStatus, CheckInStatus } from '../../api/checkin'
 import { listQuizzes, getQuizQuestions, submitQuiz, Quiz, Question, QuizResult } from '../../api/quizzes'
 import { getBookmarks, createBookmark, BookmarkItem } from '../../api/bookmarks'
 import { getHighlights, HighlightItem } from '../../api/highlights'
-import { getGoldenQuotes, createGoldenQuote, deleteGoldenQuote, GoldenQuoteItem } from '../../api/goldenQuotes'
 import { createCard, listMyCards, deleteCard, ReadingCard } from '../../api/readingCards'
 
 const { Title, Text } = Typography
@@ -245,9 +243,6 @@ const Reading: React.FC = () => {
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0 })
   const [bookmarkNote, setBookmarkNote] = useState('')
   const [showBookmarkModal, setShowBookmarkModal] = useState(false)
-  const [goldenQuotes, setGoldenQuotes] = useState<GoldenQuoteItem[]>([])
-  const [quoteNote, setQuoteNote] = useState('')
-  const [showQuoteModal, setShowQuoteModal] = useState(false)
   const [readingMode, setReadingMode] = useState(false)
   const [pageIndex, setPageIndex] = useState(0)
 
@@ -315,7 +310,6 @@ const Reading: React.FC = () => {
       fetchAnnotations(currentChapterId)
       fetchBookmarks(currentChapterId)
       fetchHighlights(currentChapterId)
-      fetchGoldenQuotes(currentChapterId)
       fetchCards()
       setPageIndex(0)
     }
@@ -488,15 +482,6 @@ const Reading: React.FC = () => {
       setHighlights(res.data)
     } catch (err) {
       console.error('加载高亮失败', err)
-    }
-  }
-
-  const fetchGoldenQuotes = async (chapterId: number) => {
-    try {
-      const res = await getGoldenQuotes(chapterId)
-      setGoldenQuotes(res.data)
-    } catch (err) {
-      console.error('加载金句失败', err)
     }
   }
 
@@ -704,33 +689,6 @@ const Reading: React.FC = () => {
       fetchBookmarks(currentChapterId)
     } catch (err: any) {
       message.error(err.response?.data?.detail || '添加书签失败')
-    }
-  }
-
-  const handleAddGoldenQuote = async () => {
-    if (!selectedRange || !selectedText) {
-      message.warning('选中文本已失效，请重新选择后收藏')
-      return
-    }
-    try {
-      await createGoldenQuote({
-        quote_text: selectedText,
-        chapter_id: currentChapterId,
-        position_start: selectedRange.start,
-        position_end: selectedRange.end,
-        source_chapter: currentChapter?.title,
-        note: quoteNote || undefined,
-      })
-      message.success('金句已收藏')
-      setQuoteNote('')
-      setShowQuoteModal(false)
-      setToolbarVisible(false)
-      setSelectedText('')
-      setSelectedRange(null)
-      window.getSelection()?.removeAllRanges()
-      fetchGoldenQuotes(currentChapterId)
-    } catch (err: any) {
-      message.error(err.response?.data?.detail || '收藏失败')
     }
   }
 
@@ -1238,25 +1196,6 @@ const Reading: React.FC = () => {
           )}
         </div>
       </div>
-
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <PushpinOutlined className="text-tenghuang" />
-          <Title level={5} className="!mb-0 !text-base">金句摘抄</Title>
-        </div>
-        <div className="space-y-2 max-h-[15vh] overflow-y-auto">
-          {goldenQuotes.length === 0 ? (
-            <Text className="text-danmo text-center block py-2 text-sm">暂无金句</Text>
-          ) : (
-            goldenQuotes.map(q => (
-              <div key={q.id} className="p-2 bg-xuanzhi-warm rounded-lg text-sm">
-                <Text className="text-mohei block line-clamp-2 italic">"{q.quote_text}"</Text>
-                {q.note && <Text className="text-danmo text-xs block mt-1">{q.note}</Text>}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
     </div>
   )
 
@@ -1369,15 +1308,6 @@ const Reading: React.FC = () => {
                 size="small"
                 icon={<BookOutlined className="text-white" />}
                 onClick={() => setShowBookmarkModal(true)}
-              />
-            </Tooltip>
-            <div className="w-px h-4 bg-danmo mx-1" />
-            <Tooltip title="摘抄金句">
-              <AntButton
-                type="text"
-                size="small"
-                icon={<PushpinOutlined className="text-white" />}
-                onClick={() => setShowQuoteModal(true)}
               />
             </Tooltip>
             <div className="w-px h-4 bg-danmo mx-1" />
@@ -1511,15 +1441,6 @@ const Reading: React.FC = () => {
                                 size="small"
                                 icon={<BookOutlined className="text-white" />}
                                 onClick={() => setShowBookmarkModal(true)}
-                              />
-                            </Tooltip>
-                            <div className="w-px h-4 bg-danmo mx-1" />
-                            <Tooltip title="摘抄金句">
-                              <AntButton
-                                type="text"
-                                size="small"
-                                icon={<PushpinOutlined className="text-white" />}
-                                onClick={() => setShowQuoteModal(true)}
                               />
                             </Tooltip>
                             <div className="w-px h-4 bg-danmo mx-1" />
@@ -1814,42 +1735,6 @@ const Reading: React.FC = () => {
                 ),
               },
               {
-                key: 'quotes',
-                label: '金句摘抄',
-                children: (
-                  <Card>
-                    {goldenQuotes.length === 0 ? (
-                      <Empty description="本章暂无金句摘抄，选中文本后点击收藏" />
-                    ) : (
-                      <div className="space-y-3">
-                        {goldenQuotes.map(q => (
-                          <div key={q.id} className="p-4 bg-xuanzhi-warm rounded-lg">
-                            <Text className="text-mohei text-sm italic block mb-2">"{q.quote_text}"</Text>
-                            <div className="flex items-center justify-between">
-                              <Text className="text-xs text-danmo">{q.source_chapter || '未知章节'}</Text>
-                              <AntButton
-                                type="link"
-                                danger
-                                size="small"
-                                onClick={() => {
-                                  deleteGoldenQuote(q.id).then(() => {
-                                    message.success('已删除')
-                                    fetchGoldenQuotes(currentChapterId)
-                                  })
-                                }}
-                              >
-                                删除
-                              </AntButton>
-                            </div>
-                            {q.note && <Text className="text-xs text-danmo mt-1 block">备注：{q.note}</Text>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </Card>
-                ),
-              },
-              {
                 key: 'cards',
                 label: '读书卡',
                 children: (
@@ -2024,27 +1909,6 @@ const Reading: React.FC = () => {
               placeholder="书签备注（可选）..."
               value={bookmarkNote}
               onChange={e => setBookmarkNote(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </Modal>
-
-        {/* Golden Quote Modal */}
-        <Modal
-          title="收藏金句"
-          open={showQuoteModal}
-          onCancel={() => setShowQuoteModal(false)}
-          onOk={handleAddGoldenQuote}
-          okText="收藏"
-          cancelText="取消"
-        >
-          <div className="space-y-3">
-            <Text className="text-danmo text-sm">选中文本：</Text>
-            <div className="p-3 bg-xuanzhi-warm rounded-lg text-sm italic">"{selectedText}"</div>
-            <TextArea
-              placeholder="金句备注（可选）..."
-              value={quoteNote}
-              onChange={e => setQuoteNote(e.target.value)}
               rows={3}
             />
           </div>

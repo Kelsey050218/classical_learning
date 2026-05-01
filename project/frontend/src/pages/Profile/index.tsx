@@ -6,7 +6,6 @@ import {
   FileTextOutlined,
   ClockCircleOutlined,
   BookOutlined,
-  StarOutlined,
   FireOutlined,
   EditOutlined,
   PlusOutlined,
@@ -348,30 +347,6 @@ const Profile: React.FC = () => {
                 />
               </Card>
             </div>
-
-            {/* Annotations */}
-            <AntCard title="我的批注" className="lg:col-span-2">
-              {materials?.annotations?.length === 0 ? (
-                <Empty description="暂无批注" />
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {materials?.annotations?.map((a) => (
-                    <Card key={a.id} variant="paper">
-                      <div className="flex items-start gap-3">
-                        <StarOutlined className="text-tenghuang text-lg mt-0.5" />
-                        <div className="flex-1">
-                          <Tag color="blue">{a.annotation_type}</Tag>
-                          <Text className="text-sm text-mohei block mt-1 line-clamp-2">{a.content}</Text>
-                          <Text className="text-xs text-danmo mt-1 block">
-                            {new Date(a.created_at).toLocaleDateString()}
-                          </Text>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </AntCard>
 
             {/* Reading Cards */}
             <AntCard title="我的读书卡">

@@ -18,6 +18,7 @@ import {
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
 import EvaluationForm from '../../components/EvaluationForm'
+import QuoteCarousel from '../../components/QuoteCarousel'
 import { getLearningProjects, LearningProject } from '../../api/learning'
 
 const { Title, Text } = Typography
@@ -98,7 +99,7 @@ const Learning: React.FC = () => {
         />
         <div className="relative z-10 max-w-5xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-6">
           <Title level={2} className="font-display !mb-2">
             学习中心
           </Title>
@@ -106,6 +107,9 @@ const Learning: React.FC = () => {
             三大项目，循序渐进，从阅读到创作，全面提升经典素养
           </Text>
         </div>
+
+        {/* Quote Carousel */}
+        <QuoteCarousel />
 
         {projects.length === 0 ? (
           <Empty description="暂无学习项目" />

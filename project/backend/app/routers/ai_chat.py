@@ -11,9 +11,9 @@ from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI 对话"])
 
-DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY", "")
-DOUBAO_API_URL = os.getenv("DOUBAO_API_URL", "https://ark.cn-beijing.volces.com/api/v3/chat/completions")
-DOUBAO_MODEL = os.getenv("DOUBAO_MODEL", "")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/chat/completions")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
 
 class ChatMessage(BaseModel):
@@ -41,33 +41,28 @@ def chat(
     req: ChatRequest,
     current_user: User = Depends(get_current_user),
 ):
-    if not DOUBAO_API_KEY:
-        raise HTTPException(status_code=500, detail="Doubao API Key 未配置")
-    if not DOUBAO_MODEL:
-        raise HTTPException(
-            status_code=500,
-            detail="Doubao 模型 ID 未配置。请在环境变量中设置 DOUBAO_MODEL（如 doubao-1.5-pro-32k-250115）"
-        )
+    if not DEEPSEEK_API_KEY:
+        raise HTTPException(status_code=500, detail="DeepSeek API Key 未配置")
 
     headers = {
-        "Authorization": f"Bearer {DOUBAO_API_KEY}",
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json",
     }
 
     payload = {
-        "model": DOUBAO_MODEL,
+        "model": DEEPSEEK_MODEL,
         "messages": _build_api_messages(req.messages),
         "stream": False,
     }
 
     try:
-        response = requests.post(DOUBAO_API_URL, headers=headers, json=payload, timeout=60)
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=60)
         if not response.ok:
             error_text = response.text
-            print(f"[Doubao API Error] status={response.status_code}, body={error_text}")
+            print(f"[DeepSeek API Error] status={response.status_code}, body={error_text}")
             raise HTTPException(
                 status_code=502,
-                detail=f"Doubao API 错误 {response.status_code}: {error_text[:500]}",
+                detail=f"DeepSeek API 错误 {response.status_code}: {error_text[:500]}",
             )
         data = response.json()
 
@@ -88,32 +83,27 @@ def chat_stream(
     current_user: User = Depends(get_current_user),
 ):
     """Stream AI response using SSE."""
-    if not DOUBAO_API_KEY:
-        raise HTTPException(status_code=500, detail="Doubao API Key 未配置")
-    if not DOUBAO_MODEL:
-        raise HTTPException(
-            status_code=500,
-            detail="Doubao 模型 ID 未配置。请在环境变量中设置 DOUBAO_MODEL"
-        )
+    if not DEEPSEEK_API_KEY:
+        raise HTTPException(status_code=500, detail="DeepSeek API Key 未配置")
 
     headers = {
-        "Authorization": f"Bearer {DOUBAO_API_KEY}",
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json",
     }
 
     payload = {
-        "model": DOUBAO_MODEL,
+        "model": DEEPSEEK_MODEL,
         "messages": _build_api_messages(req.messages),
         "stream": True,
     }
 
     def event_generator():
         try:
-            response = requests.post(DOUBAO_API_URL, headers=headers, json=payload, stream=True, timeout=60)
+            response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, stream=True, timeout=60)
             if not response.ok:
                 error_text = response.text
-                print(f"[Doubao Stream Error] status={response.status_code}, body={error_text}")
-                yield f"data: {json.dumps({'error': f'Doubao API 错误 {response.status_code}'})}\n\n"
+                print(f"[DeepSeek Stream Error] status={response.status_code}, body={error_text}")
+                yield f"data: {json.dumps({'error': f'DeepSeek API 错误 {response.status_code}'})}\n\n"
                 return
 
             for line in response.iter_lines():
