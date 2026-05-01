@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Input, Select, Button, message, Card as AntCard, List, Tag, Popconfirm, Modal } from 'antd'
-import { VideoCameraOutlined, SaveOutlined, CloudUploadOutlined, DeleteOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { VideoCameraOutlined, SaveOutlined, CloudUploadOutlined, DeleteOutlined, PlayCircleOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import EvaluationForm from '../../components/EvaluationForm'
 import { createWork, listMyWorks, deleteWork, publishWork, Work, WorkCreate } from '../../api/works'
@@ -136,6 +136,14 @@ const VideoEdit: React.FC = () => {
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-5xl mx-auto">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/learning')}
+          className="mb-4"
+        >
+          返回学习中心
+        </Button>
+
         {/* Header */}
         <div className="text-center mb-8">
           <Title level={2} className="font-display !mb-2">

@@ -14,6 +14,7 @@ import {
   FileTextOutlined,
   AudioOutlined,
   MessageOutlined,
+  BuildOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
@@ -32,6 +33,7 @@ const projectIcons: Record<string, React.ReactNode> = {
 
 const subProjectIcons: Record<string, React.ReactNode> = {
   timeline: <HistoryOutlined />,
+  restoration: <BuildOutlined />,
   forum: <TeamOutlined />,
   ai_script: <FileTextOutlined />,
   audio: <AudioOutlined />,
@@ -40,7 +42,7 @@ const subProjectIcons: Record<string, React.ReactNode> = {
 }
 
 const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-  completed: { color: 'text-zhuqing', icon: <CheckCircleOutlined />, label: '已完成' },
+  completed: { color: 'text-zhusha', icon: <CheckCircleOutlined />, label: '已完成' },
   in_progress: { color: 'text-zhusha', icon: <UnlockOutlined />, label: '进行中' },
   locked: { color: 'text-danmo', icon: <LockOutlined />, label: '未解锁' },
 }
@@ -131,7 +133,7 @@ const Learning: React.FC = () => {
                       <div className={`
                         rounded-full flex items-center justify-center transition-all
                         ${project.status === 'completed'
-                          ? 'w-8 h-8 bg-zhuqing text-white shadow-lg shadow-zhuqing/30'
+                          ? 'w-8 h-8 bg-zhusha text-white shadow-lg shadow-zhusha/30'
                           : project.status === 'in_progress'
                           ? 'w-9 h-9 bg-zhusha text-white shadow-lg shadow-zhusha/30 ring-4 ring-zhusha-100'
                           : 'w-8 h-8 border-2 border-danmo bg-xuanzhi text-danmo'
@@ -147,7 +149,7 @@ const Learning: React.FC = () => {
                       </div>
                       {!isLast && (
                         <div className={`w-0.5 flex-1 mt-2 ${
-                          project.status === 'completed' ? 'bg-zhuqing' : 'bg-danmo-light'
+                          project.status === 'completed' ? 'bg-zhusha' : 'bg-danmo-light'
                         }`} />
                       )}
                     </div>
@@ -164,14 +166,14 @@ const Learning: React.FC = () => {
                             isLocked
                               ? 'bg-gray-100 text-danmo'
                               : project.status === 'completed'
-                              ? 'bg-zhuqing-50 text-zhuqing'
+                              ? 'bg-zhusha-50 text-zhusha'
                               : 'bg-zhusha-50 text-zhusha'
                           }`}>
                             {projectIcons[project.icon] || <BookOutlined />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <Tag color={isLocked ? 'default' : project.status === 'completed' ? 'success' : 'error'}>
+                              <Tag color={isLocked ? 'default' : project.status === 'completed' ? '#C73E3A' : 'error'}>
                                 <span className="flex items-center gap-1">
                                   {status.icon}
                                   {status.label}
@@ -199,7 +201,7 @@ const Learning: React.FC = () => {
                             </div>
                             <AntProgress
                               percent={project.progress}
-                              strokeColor={project.status === 'completed' ? '#5A9A6E' : '#C73E3A'}
+                              strokeColor={'#C73E3A'}
                               trailColor="#F5F2EB"
                               size="small"
                               showInfo={false}
@@ -230,7 +232,7 @@ const Learning: React.FC = () => {
                                   sp.status === 'locked'
                                     ? 'border-danmo-light bg-xuanzhi-warm/50 text-danmo cursor-not-allowed opacity-60'
                                     : sp.status === 'completed'
-                                    ? 'border-zhuqing bg-zhuqing-50 text-zhuqing hover:bg-zhuqing-100 hover:shadow-card'
+                                    ? 'border-zhusha bg-zhusha-50 text-zhusha hover:bg-zhusha-100 hover:shadow-card'
                                     : 'border-danmo-light bg-white text-mohei hover:border-zhusha hover:bg-zhusha-50 hover:text-zhusha hover:shadow-card'
                                 }`}
                               >
@@ -238,14 +240,14 @@ const Learning: React.FC = () => {
                                   sp.status === 'locked'
                                     ? 'bg-gray-100 text-danmo'
                                     : sp.status === 'completed'
-                                    ? 'bg-zhuqing-100 text-zhuqing'
+                                    ? 'bg-zhusha-100 text-zhusha'
                                     : 'bg-zhusha-50 text-zhusha group-hover:bg-zhusha group-hover:text-white transition-colors'
                                 }`}>
                                   {subProjectIcons[sp.slug] || <ArrowRightOutlined className="text-xs" />}
                                 </div>
                                 <span className="text-sm font-medium whitespace-nowrap">{sp.name}</span>
                                 {sp.status === 'completed' && (
-                                  <CheckCircleOutlined className="text-zhuqing text-xs flex-shrink-0" />
+                                  <CheckCircleOutlined className="text-zhusha text-xs flex-shrink-0" />
                                 )}
                                 {sp.status === 'locked' && (
                                   <LockOutlined className="text-danmo text-xs flex-shrink-0" />

@@ -37,7 +37,6 @@ import { logStudyTime } from '../../api/studyTime'
 import { getCheckInStatus, CheckInStatus } from '../../api/checkin'
 import { listQuizzes, getQuizQuestions, submitQuiz, Quiz, Question, QuizResult } from '../../api/quizzes'
 import { getBookmarks, createBookmark, BookmarkItem } from '../../api/bookmarks'
-import { getHighlights, HighlightItem } from '../../api/highlights'
 import { createCard, listMyCards, deleteCard, ReadingCard } from '../../api/readingCards'
 
 const { Title, Text } = Typography
@@ -238,7 +237,6 @@ const Reading: React.FC = () => {
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null)
   const [quizLoading, setQuizLoading] = useState(false)
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([])
-  const [highlights, setHighlights] = useState<HighlightItem[]>([])
   const [toolbarVisible, setToolbarVisible] = useState(false)
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0 })
   const [bookmarkNote, setBookmarkNote] = useState('')
@@ -309,7 +307,6 @@ const Reading: React.FC = () => {
       fetchChapterData(currentChapterId)
       fetchAnnotations(currentChapterId)
       fetchBookmarks(currentChapterId)
-      fetchHighlights(currentChapterId)
       fetchCards()
       setPageIndex(0)
     }
@@ -473,15 +470,6 @@ const Reading: React.FC = () => {
       setBookmarks(res.data)
     } catch (err) {
       console.error('加载书签失败', err)
-    }
-  }
-
-  const fetchHighlights = async (chapterId: number) => {
-    try {
-      const res = await getHighlights(chapterId)
-      setHighlights(res.data)
-    } catch (err) {
-      console.error('加载高亮失败', err)
     }
   }
 
@@ -999,7 +987,7 @@ const Reading: React.FC = () => {
   interface TextMark {
     start: number
     end: number
-    type: 'annotation' | 'highlight' | 'bookmark'
+    type: 'annotation' | 'bookmark'
     color?: string
     content?: string
   }
@@ -1013,16 +1001,6 @@ const Reading: React.FC = () => {
           end: Math.min(anno.position_end, p.globalEnd),
           type: 'annotation',
           content: anno.content,
-        })
-      }
-    }
-    for (const hl of highlights) {
-      if (hl.position_end > p.globalStart && hl.position_start < p.globalEnd) {
-        marks.push({
-          start: Math.max(hl.position_start, p.globalStart),
-          end: Math.min(hl.position_end, p.globalEnd),
-          type: 'highlight',
-          color: hl.color,
         })
       }
     }
@@ -1061,21 +1039,7 @@ const Reading: React.FC = () => {
       }
 
       const markText = p.text.slice(mStartInPara, mEndInPara)
-      if (m.type === 'highlight') {
-        const bg =
-          m.color === 'green'
-            ? '#D1FAE5'
-            : m.color === 'blue'
-            ? '#DBEAFE'
-            : m.color === 'pink'
-            ? '#FCE7F3'
-            : '#FEF3C7'
-        spans.push(
-          <mark key={`hl-${i}`} className="rounded px-0.5" style={{ backgroundColor: bg }}>
-            {markText}
-          </mark>
-        )
-      } else if (m.type === 'annotation') {
+      if (m.type === 'annotation') {
         const parsed = parseAnnotationContent(m.content || '')
         const title = formatAnnotationTooltip(parsed)
         spans.push(
@@ -1196,6 +1160,8 @@ const Reading: React.FC = () => {
           )}
         </div>
       </div>
+
+
     </div>
   )
 
