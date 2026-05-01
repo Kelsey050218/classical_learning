@@ -5,7 +5,7 @@
 """
 
 import re
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import func
@@ -314,5 +314,5 @@ def compute_radar(user_id: int, db: Session) -> dict:
         "overall_score": overall,
         "dimensions": dimensions,
         "summary_text": _compose_summary(dimensions),
-        "generated_at": datetime.utcnow(),
+        "generated_at": datetime.now(timezone.utc),
     }
