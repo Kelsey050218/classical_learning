@@ -213,7 +213,11 @@ const Profile: React.FC = () => {
         listMyEvaluations(),
         getReadingProgressList(),
         getCheckInStatus(),
-        getLiteracyRadar().catch(() => {
+        getLiteracyRadar().catch((err) => {
+          if (err?.response?.status === 401) {
+            window.location.href = '/login'
+            return null
+          }
           setLiteracyError(true)
           return null
         }),
@@ -377,7 +381,7 @@ const Profile: React.FC = () => {
                   </Title>
                   <Text className="text-mohei">{literacyRadar.summary_text}</Text>
                   <div className="flex items-center gap-3 mt-4 text-xs text-danmo">
-                    <span>数据更新于 {new Date(literacyRadar.generated_at).toLocaleString()}</span>
+                    <span>数据更新于 {new Date(literacyRadar.generated_at).toLocaleString('zh-CN', { timeZone: 'UTC' })} (UTC)</span>
                     <Button size="small" icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
                   </div>
                 </Card>
