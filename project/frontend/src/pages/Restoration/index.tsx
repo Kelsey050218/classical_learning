@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Spin, Empty, Button } from 'antd'
-import { BookOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { Typography, Spin, Empty, Button, Progress } from 'antd'
+import { BookOutlined, ArrowLeftOutlined, LockOutlined, ToolOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import { listChapters, getProgress, RestorationChapter, Progress as RestorationProgress } from '../../api/restoration'
 
@@ -17,6 +17,12 @@ const difficultyColors: Record<string, string> = {
   easy: '#5A9A6E',
   medium: '#F4A442',
   hard: '#C73E3A',
+}
+
+const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode; bg: string; border: string }> = {
+  locked: { label: '待修复', color: '#8C8C8C', icon: <LockOutlined />, bg: 'bg-gray-50', border: 'border-gray-200' },
+  diagnostic: { label: '修复中', color: '#C73E3A', icon: <ToolOutlined />, bg: 'bg-white', border: 'border-[#D4A574]' },
+  completed: { label: '已复原', color: '#5A9A6E', icon: <CheckCircleOutlined />, bg: 'bg-[#f0f9f4]', border: 'border-[#5A9A6E]' },
 }
 
 const RestorationHall: React.FC = () => {
@@ -43,6 +49,12 @@ const RestorationHall: React.FC = () => {
   const progressMap = Object.fromEntries(progressList.map(p => [p.chapter_id, p]))
   const minSortOrder = chapters.length > 0 ? Math.min(...chapters.map(c => c.sort_order)) : 0
 
+  const getStepProgress = (step: string) => {
+    const steps = ['locked', 'diagnostic', 'fragment', 'reorder', 'network', 'annotation', 'completed']
+    const idx = steps.indexOf(step)
+    return idx >= 0 ? Math.round((idx / (steps.length - 1)) * 100) : 0
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -55,29 +67,39 @@ const RestorationHall: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/learning')}
-          className="mb-4"
+          className="mb-6 hover:text-zhusha transition-colors"
         >
           返回学习中心
         </Button>
 
         {/* Header */}
-        <div className="text-center mb-10">
-          <Title level={2} className="font-display !mb-2">
+        <div className="text-center mb-12 relative">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-[#D4A574]" />
+            <BookOutlined className="text-2xl text-[#D4A574]" />
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-[#D4A574]" />
+          </div>
+          <Title level={2} className="font-display !mb-3 !text-[#2F2F2F]">
             断简残编·经典复原室
           </Title>
-          <Text className="text-danmo">
+          <Text className="text-danmo text-base">
             跟着朱自清，修复中华经典
           </Text>
+          <div className="mt-4 flex justify-center gap-6 text-sm text-danmo">
+            <span className="flex items-center gap-1"><LockOutlined /> 待修复</span>
+            <span className="flex items-center gap-1"><ToolOutlined className="text-zhusha" /> 修复中</span>
+            <span className="flex items-center gap-1"><CheckCircleOutlined className="text-zhuqing" /> 已复原</span>
+          </div>
         </div>
 
         {chapters.length === 0 ? (
           <Empty description="暂无典籍数据" />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {chapters.map(ch => {
               const progress = progressMap[ch.id]
               const rawStatus = progress?.current_step
@@ -86,43 +108,74 @@ const RestorationHall: React.FC = () => {
                 : (ch.sort_order === minSortOrder ? 'diagnostic' : 'locked')
               const isCompleted = status === 'completed'
               const isLocked = status === 'locked'
+              const cfg = statusConfig[status] || statusConfig.locked
+              const stepProgress = getStepProgress(status)
 
               return (
-                <button
+                <div
                   key={ch.id}
                   onClick={() => !isLocked && navigate(`/restoration/${ch.id}`)}
-                  disabled={isLocked}
-                  className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                  className={`group relative rounded-2xl border-2 overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-lg ${
                     isLocked
-                      ? 'border-danmo-light bg-xuanzhi-warm/50 opacity-60 cursor-not-allowed'
-                      : isCompleted
-                      ? 'border-zhuqing bg-zhuqing-50 hover:shadow-card-hover'
-                      : 'border-[#D4A574]/50 bg-white/80 hover:border-zhusha hover:shadow-card-hover'
-                  }`}
+                      ? 'opacity-60 cursor-not-allowed'
+                      : 'hover:shadow-xl'
+                  } ${cfg.bg} ${cfg.border}`}
+                  style={{ borderColor: isLocked ? undefined : cfg.border.replace('border-[', '').replace(']', '') }}
                 >
-                  {isCompleted && (
-                    <div className="absolute top-2 right-2 text-zhuqing">
-                      <BookOutlined />
+                  {/* Image */}
+                  <div className="relative h-40 bg-gradient-to-br from-[#f5f0e8] to-[#e8dfd0] overflow-hidden">
+                    {ch.image_url ? (
+                      <img
+                        src={ch.image_url}
+                        alt={ch.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOutlined className="text-5xl text-[#D4A574]/40" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 right-3">
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium shadow-sm" style={{
+                        backgroundColor: difficultyColors[ch.difficulty] + '25',
+                        color: difficultyColors[ch.difficulty],
+                        backdropFilter: 'blur(4px)',
+                      }}>
+                        {difficultyLabels[ch.difficulty]}
+                      </span>
                     </div>
-                  )}
-                  <div className="text-xs px-2 py-0.5 rounded inline-block mb-2" style={{
-                    backgroundColor: difficultyColors[ch.difficulty] + '20',
-                    color: difficultyColors[ch.difficulty],
-                  }}>
-                    {difficultyLabels[ch.difficulty]}
+                    {isCompleted && (
+                      <div className="absolute inset-0 bg-[#5A9A6E]/10 flex items-center justify-center">
+                        <div className="bg-white/90 rounded-full p-2 shadow-md">
+                          <CheckCircleOutlined className="text-2xl text-[#5A9A6E]" />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <h3 className="font-medium text-[#2F2F2F] text-sm mb-1">{ch.name}</h3>
-                  <p className="text-xs text-[#8B7355]">{ch.alias}</p>
-                  {isLocked && (
-                    <p className="text-xs text-danmo mt-2">待修复</p>
-                  )}
-                  {isCompleted && (
-                    <p className="text-xs text-zhuqing mt-2">已复原</p>
-                  )}
-                  {!isLocked && !isCompleted && (
-                    <p className="text-xs text-zhusha mt-2">修复中</p>
-                  )}
-                </button>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <h3 className="font-display font-semibold text-lg text-[#2F2F2F] mb-1">{ch.name}</h3>
+                    <p className="text-sm text-[#8B7355] mb-3">{ch.alias}</p>
+
+                    {/* Progress */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: cfg.color }}>
+                          {cfg.icon} {cfg.label}
+                        </span>
+                        <span className="text-xs text-danmo">{stepProgress}%</span>
+                      </div>
+                      <Progress
+                        percent={stepProgress}
+                        size="small"
+                        showInfo={false}
+                        strokeColor={cfg.color}
+                        trailColor={isLocked ? '#e8e4dc' : '#f0ebe3'}
+                      />
+                    </div>
+                  </div>
+                </div>
               )
             })}
           </div>
