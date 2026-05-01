@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Typography, Spin, Empty, Card as AntCard, Button, Input, Radio, message, Badge, Modal } from 'antd'
-import { MessageOutlined, LikeOutlined, DislikeOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { Typography, Spin, Empty, Card as AntCard, Button, Input, Radio, message, Badge, Modal, Form, Dropdown } from 'antd'
+import { MessageOutlined, LikeOutlined, DislikeOutlined, CheckCircleOutlined, ArrowLeftOutlined, PlusOutlined, MoreOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import EvaluationForm from '../../components/EvaluationForm'
-import { listTopics, listPosts, createPost, votePost } from '../../api/forum'
+import { listTopics, listPosts, createPost, votePost, createTopic, closeTopic, deleteTopic } from '../../api/forum'
 import { completeSubProject } from '../../api/learning'
+import { useAuthStore } from '../../stores/auth'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -14,7 +15,10 @@ interface Topic {
   id: number
   title: string
   description?: string
+  status?: string
   post_count: number
+  created_by: number
+  is_system: boolean
   created_at: string
 }
 
@@ -45,6 +49,7 @@ const stanceLabels: Record<string, string> = {
 const Forum: React.FC = () => {
   const navigate = useNavigate()
   const { topicId } = useParams()
+  const { user } = useAuthStore()
   const [topics, setTopics] = useState<Topic[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,6 +60,9 @@ const Forum: React.FC = () => {
   const [completed, setCompleted] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [evalVisible, setEvalVisible] = useState(false)
+  const [createModalVisible, setCreateModalVisible] = useState(false)
+  const [creatingTopic, setCreatingTopic] = useState(false)
+  const [createForm] = Form.useForm()
 
   const handleComplete = async () => {
     setCompleting(true)
@@ -109,6 +117,54 @@ const Forum: React.FC = () => {
       setPosts(res.data)
     } catch (err) {
       console.error('Failed to load posts:', err)
+    }
+  }
+
+  const handleCreateTopic = async () => {
+    try {
+      const values = await createForm.validateFields()
+      setCreatingTopic(true)
+      const res = await createTopic({
+        title: values.title.trim(),
+        description: values.description?.trim() || undefined,
+      })
+      message.success('话题创建成功！')
+      createForm.resetFields()
+      setCreateModalVisible(false)
+      await fetchTopics()
+      navigate(`/forum/${res.data.id}`)
+    } catch (err: any) {
+      if (err?.errorFields) return // form validation errors
+      message.error(err?.response?.data?.detail || '创建话题失败')
+    } finally {
+      setCreatingTopic(false)
+    }
+  }
+
+  const handleCloseTopic = async (topic: Topic) => {
+    try {
+      await closeTopic(topic.id)
+      message.success('话题已关闭')
+      await fetchTopics()
+      // If the closed topic was selected, fall back to first remaining topic
+      if (selectedTopic?.id === topic.id) {
+        navigate('/forum')
+      }
+    } catch (err: any) {
+      message.error(err?.response?.data?.detail || '关闭失败')
+    }
+  }
+
+  const handleDeleteTopic = async (topic: Topic) => {
+    try {
+      await deleteTopic(topic.id)
+      message.success('话题已删除')
+      await fetchTopics()
+      if (selectedTopic?.id === topic.id) {
+        navigate('/forum')
+      }
+    } catch (err: any) {
+      message.error(err?.response?.data?.detail || '删除失败')
     }
   }
 
@@ -178,51 +234,110 @@ const Forum: React.FC = () => {
           </Text>
         </div>
 
-        {topics.length === 0 ? (
-          <Empty description="暂无讨论话题" />
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Topic List */}
-            <div className="lg:col-span-1 space-y-4">
-              <Title level={5} className="font-display">讨论话题</Title>
-              {topics.map(topic => (
-                <AntCard
-                  key={topic.id}
-                  hoverable
-                  className={`cursor-pointer transition-all ${
-                    selectedTopic?.id === topic.id ? 'border-zhusha border-2' : ''
-                  }`}
-                  onClick={() => navigate(`/forum/${topic.id}`)}
-                >
-                  <div className="flex items-start gap-3">
-                    <MessageOutlined className="text-zhusha text-lg mt-1" />
-                    <div className="flex-1 min-w-0">
-                      <Text className="font-medium text-mohei block truncate">
-                        {topic.title}
-                      </Text>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge count={topic.post_count} showZero color="#C73E3A" />
-                        <Text className="text-danmo text-xs">回复</Text>
-                      </div>
-                    </div>
-                  </div>
-                </AntCard>
-              ))}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Topic List */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="flex items-center justify-between">
+              <Title level={5} className="font-display !mb-0">讨论话题</Title>
+              <Button
+                type="primary"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalVisible(true)}
+                className="bg-zhusha hover:bg-zhusha-light"
+              >
+                新建话题
+              </Button>
             </div>
-
-            {/* Post Area */}
-            <div className="lg:col-span-2">
-              {selectedTopic ? (
-                <div className="space-y-6">
-                  {/* Topic Header */}
-                  <AntCard className="bg-xuanzhi-warm">
-                    <Title level={4} className="font-display !mb-2">
-                      {selectedTopic.title}
-                    </Title>
-                    <Text className="text-danmo block">
-                      {selectedTopic.description}
-                    </Text>
+            {topics.length === 0 ? (
+              <Empty description="暂无讨论话题，点击右上角创建一个吧" />
+            ) : (
+              topics.map(topic => {
+                const canManage = !topic.is_system && user?.id === topic.created_by
+                const menuItems = [
+                  {
+                    key: 'close',
+                    label: '关闭话题',
+                    onClick: () => {
+                      Modal.confirm({
+                        title: '确认关闭话题？',
+                        content: '关闭后将不再出现在列表中，已发观点会保留。',
+                        okText: '确认关闭',
+                        cancelText: '取消',
+                        onOk: () => handleCloseTopic(topic),
+                      })
+                    },
+                  },
+                  {
+                    key: 'delete',
+                    danger: true,
+                    label: '删除话题',
+                    onClick: () => {
+                      Modal.confirm({
+                        title: '确认删除话题？',
+                        content: '此操作不可恢复，已发观点会一并隐藏。',
+                        okText: '删除',
+                        okType: 'danger',
+                        cancelText: '取消',
+                        onOk: () => handleDeleteTopic(topic),
+                      })
+                    },
+                  },
+                ]
+                return (
+                  <AntCard
+                    key={topic.id}
+                    hoverable
+                    className={`cursor-pointer transition-all ${
+                      selectedTopic?.id === topic.id ? 'border-zhusha border-2' : ''
+                    }`}
+                    onClick={() => navigate(`/forum/${topic.id}`)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <MessageOutlined className="text-zhusha text-lg mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <Text className="font-medium text-mohei block truncate">
+                          {topic.title}
+                        </Text>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge count={topic.post_count} showZero color="#C73E3A" />
+                          <Text className="text-danmo text-xs">回复</Text>
+                        </div>
+                      </div>
+                      {canManage && (
+                        <Dropdown
+                          menu={{ items: menuItems }}
+                          trigger={['click']}
+                          placement="bottomRight"
+                        >
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<MoreOutlined />}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        </Dropdown>
+                      )}
+                    </div>
                   </AntCard>
+                )
+              })
+            )}
+          </div>
+
+          {/* Post Area */}
+          <div className="lg:col-span-2">
+            {selectedTopic ? (
+              <div className="space-y-6">
+                {/* Topic Header */}
+                <AntCard className="bg-xuanzhi-warm">
+                  <Title level={4} className="font-display !mb-2">
+                    {selectedTopic.title}
+                  </Title>
+                  <Text className="text-danmo block">
+                    {selectedTopic.description}
+                  </Text>
+                </AntCard>
 
                   {/* New Post Form */}
                   <AntCard>
@@ -342,7 +457,6 @@ const Forum: React.FC = () => {
               )}
             </div>
           </div>
-        )}
       </div>
     </div>
       <Modal
@@ -360,6 +474,41 @@ const Forum: React.FC = () => {
             navigate('/learning')
           }}
         />
+      </Modal>
+      <Modal
+        title="新建讨论话题"
+        open={createModalVisible}
+        onCancel={() => {
+          if (creatingTopic) return
+          setCreateModalVisible(false)
+          createForm.resetFields()
+        }}
+        onOk={handleCreateTopic}
+        okText="创建"
+        cancelText="取消"
+        confirmLoading={creatingTopic}
+        okButtonProps={{ className: 'bg-zhusha hover:bg-zhusha-light' }}
+        destroyOnClose
+      >
+        <Form form={createForm} layout="vertical" preserve={false}>
+          <Form.Item
+            name="title"
+            label="话题标题"
+            rules={[
+              { required: true, message: '请输入话题标题' },
+              { max: 500, message: '标题不能超过 500 字' },
+              { whitespace: true, message: '标题不能为空' },
+            ]}
+          >
+            <Input placeholder="例如：孔子的'仁'与现代社会的距离" />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="话题描述（选填）"
+          >
+            <TextArea rows={4} placeholder="简要说明你想讨论的问题或观点背景..." />
+          </Form.Item>
+        </Form>
       </Modal>
     </Layout>
   )

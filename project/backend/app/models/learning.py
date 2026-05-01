@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Enum, DateTime, Text, String, JSON, UniqueConstraint
+from sqlalchemy import Column, Integer, ForeignKey, Enum, DateTime, Text, String, JSON, UniqueConstraint, Boolean
 from app.models.base import BaseModel
 from datetime import datetime
 import enum
@@ -47,6 +47,7 @@ class ForumTopic(BaseModel):
     description = Column(Text, nullable=True)
     status = Column(Enum(TopicStatus), default=TopicStatus.active)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_system = Column(Boolean, nullable=False, default=False, server_default="0")
 
 
 class ForumPost(BaseModel):

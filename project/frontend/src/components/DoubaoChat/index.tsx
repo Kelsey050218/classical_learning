@@ -36,11 +36,11 @@ const DoubaoChat: React.FC = () => {
   const {
     supported: voiceSupported,
     isListening,
+    isProcessing: voiceProcessing,
     interim,
     toggle: toggleVoice,
     stop: stopVoice,
   } = useSpeechRecognition({
-    lang: 'zh-CN',
     onError: (msg) => message.error(msg),
     onFinalResult: (text) => {
       setInput((prev) => (prev ? `${prev}${text}` : text))
@@ -260,14 +260,14 @@ const DoubaoChat: React.FC = () => {
 
           {/* Input */}
           <div className="mt-4 pt-3 border-t border-danmo-light">
-            {isListening && (
+            {(isListening || voiceProcessing) && (
               <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-zhusha-50 border border-zhusha-100">
                 <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zhusha opacity-60" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-zhusha" />
                 </span>
                 <Text className="text-xs text-zhusha flex-1 truncate">
-                  {interim ? interim : '正在聆听，请说话...'}
+                  {interim || (voiceProcessing ? '正在识别...' : '正在录音...')}
                 </Text>
               </div>
             )}
@@ -276,7 +276,13 @@ const DoubaoChat: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isListening ? '正在聆听...' : '输入你的问题，或点击麦克风语音输入'}
+                placeholder={
+                  isListening
+                    ? '正在录音，再次点击麦克风结束'
+                    : voiceProcessing
+                    ? '正在识别...'
+                    : '输入你的问题，或点击麦克风语音输入'
+                }
                 autoSize={{ minRows: 1, maxRows: 4 }}
                 className="flex-1"
                 disabled={loading}
@@ -286,7 +292,8 @@ const DoubaoChat: React.FC = () => {
                   <Button
                     icon={isListening ? <AudioMutedOutlined /> : <AudioOutlined />}
                     onClick={toggleVoice}
-                    disabled={loading}
+                    disabled={loading || voiceProcessing}
+                    loading={voiceProcessing}
                     className={
                       isListening
                         ? '!bg-zhusha !text-white !border-zhusha hover:!bg-zhusha-dark'

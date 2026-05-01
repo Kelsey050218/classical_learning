@@ -48,6 +48,10 @@ const RestorationHall: React.FC = () => {
 
   const progressMap = Object.fromEntries(progressList.map(p => [p.chapter_id, p]))
   const minSortOrder = chapters.length > 0 ? Math.min(...chapters.map(c => c.sort_order)) : 0
+  const completedSortOrders = chapters
+    .filter(c => progressMap[c.id]?.current_step === 'completed')
+    .map(c => c.sort_order)
+  const maxCompletedSortOrder = completedSortOrders.length > 0 ? Math.max(...completedSortOrders) : -Infinity
 
   const getStepProgress = (step: string) => {
     const steps = ['locked', 'diagnostic', 'fragment', 'reorder', 'network', 'annotation', 'completed']
@@ -67,7 +71,7 @@ const RestorationHall: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto px-4 py-8 relative">
+      <div className="max-w-6xl mx-auto px-4 py-8 relative min-h-[calc(100vh-160px)]">
         {/* Background - same as Learning center */}
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
@@ -110,9 +114,11 @@ const RestorationHall: React.FC = () => {
             {chapters.map(ch => {
               const progress = progressMap[ch.id]
               const rawStatus = progress?.current_step
+              const isUnlockedBySequence =
+                ch.sort_order === minSortOrder || ch.sort_order <= maxCompletedSortOrder + 1
               const status = rawStatus && rawStatus !== 'locked'
                 ? rawStatus
-                : (ch.sort_order === minSortOrder ? 'diagnostic' : 'locked')
+                : (isUnlockedBySequence ? 'diagnostic' : 'locked')
               const isCompleted = status === 'completed'
               const isLocked = status === 'locked'
               const cfg = statusConfig[status] || statusConfig.locked
@@ -122,10 +128,10 @@ const RestorationHall: React.FC = () => {
                 <div
                   key={ch.id}
                   onClick={() => !isLocked && navigate(`/restoration/${ch.id}`)}
-                  className={`group relative rounded-2xl border-2 overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-lg ${
+                  className={`group relative rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
                     isLocked
-                      ? 'opacity-60 cursor-not-allowed'
-                      : 'hover:shadow-xl'
+                      ? 'cursor-not-allowed'
+                      : 'cursor-pointer hover:-translate-y-1 hover:shadow-xl'
                   } ${cfg.bg} ${cfg.border}`}
                   style={{ borderColor: isLocked ? undefined : cfg.border.replace('border-[', '').replace(']', '') }}
                 >
@@ -135,7 +141,9 @@ const RestorationHall: React.FC = () => {
                       <img
                         src={ch.image_url}
                         alt={ch.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className={`w-full h-full object-cover transition-transform duration-500 ${
+                          isLocked ? 'grayscale' : 'group-hover:scale-105'
+                        }`}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -155,6 +163,13 @@ const RestorationHall: React.FC = () => {
                       <div className="absolute inset-0 bg-[#5A9A6E]/10 flex items-center justify-center">
                         <div className="bg-white/90 rounded-full p-2 shadow-md">
                           <CheckCircleOutlined className="text-2xl text-[#5A9A6E]" />
+                        </div>
+                      </div>
+                    )}
+                    {isLocked && (
+                      <div className="absolute inset-0 bg-[#2F2F2F]/35 flex items-center justify-center">
+                        <div className="bg-white/90 rounded-full p-3 shadow-md">
+                          <LockOutlined className="text-2xl text-[#8C8C8C]" />
                         </div>
                       </div>
                     )}

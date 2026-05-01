@@ -79,34 +79,42 @@ const ChapterRepair: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/restoration')}
-          className="mb-4"
-        >
-          返回复原室
-        </Button>
+      <div className="max-w-4xl mx-auto px-4 py-8 relative min-h-[calc(100vh-160px)]">
+        {/* Background - same as Learning center */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full bg-cover bg-center opacity-[0.30] pointer-events-none"
+          style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
+        />
 
-        <div className="mb-6">
-          <Title level={3} className="font-display !mb-1">
-            {chapter.alias}
-          </Title>
-          <Text className="text-danmo">{chapter.description}</Text>
-        </div>
+        <div className="relative z-10">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/restoration')}
+            className="mb-4"
+          >
+            返回复原室
+          </Button>
 
-        <RepairStepper currentStep={currentStep} />
-
-        {progress?.current_step === 'completed' ? (
-          <div className="text-center py-12">
-            <p className="text-zhuqing text-lg font-medium mb-4">该典籍已修复完成！</p>
-            <Button onClick={() => navigate('/restoration')}>
-              返回复原室
-            </Button>
+          <div className="mb-6">
+            <Title level={3} className="font-display !mb-1">
+              {chapter.alias}
+            </Title>
+            <Text className="text-danmo">{chapter.description}</Text>
           </div>
-        ) : (
-          <StepComponent chapterId={id} onComplete={handleStepComplete} />
-        )}
+
+          <RepairStepper currentStep={currentStep} />
+
+          {progress?.current_step === 'completed' ? (
+            <div className="text-center py-12">
+              <p className="text-zhuqing text-lg font-medium mb-4">该典籍已修复完成！</p>
+              <Button onClick={() => navigate('/restoration')}>
+                返回复原室
+              </Button>
+            </div>
+          ) : (
+            <StepComponent chapterId={id} onComplete={handleStepComplete} />
+          )}
+        </div>
       </div>
     </Layout>
   )
