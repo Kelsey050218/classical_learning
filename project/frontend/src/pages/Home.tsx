@@ -14,7 +14,6 @@ import Card from '../components/UI/Card'
 import Progress from '../components/UI/Progress'
 import Badge from '../components/UI/Badge'
 import Carousel from '../components/Carousel'
-import VideoBanner from '../components/VideoBanner'
 import apiClient from '../api/client'
 import { useAuthStore } from '../stores/auth'
 import { getTodayStudyTime } from '../api/studyTime'
@@ -168,9 +167,6 @@ const Home: React.FC = () => {
         <div className="relative z-10 space-y-6 stagger-children">
         {/* Carousel */}
         <Carousel />
-
-        {/* Video Banner */}
-        <VideoBanner />
 
         {/* Welcome section */}
         <Card variant="paper" className="relative overflow-hidden">

@@ -25,6 +25,8 @@ interface LoginResponse {
   }
 }
 
+const VIDEO_URL = 'https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/video/%E5%8A%A8%E6%80%81%E7%BF%BB%E9%A1%B5%E8%A7%86%E9%A2%91.mp4'
+
 const Login: React.FC = () => {
   const { setUser } = useAuthStore()
   const [loading, setLoading] = useState(false)
@@ -56,6 +58,16 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-xuanzhi via-xuanzhi-warm to-xuanzhi-dark relative overflow-hidden">
+      {/* Video background */}
+      <video
+        src={VIDEO_URL}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+      />
+
       {/* Decorative elements */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-zhusha-100 rounded-full opacity-50 blur-3xl" />
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-shiqing-100 rounded-full opacity-50 blur-3xl" />
