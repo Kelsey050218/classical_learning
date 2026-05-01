@@ -11,6 +11,8 @@ import {
   PlusOutlined,
   SoundOutlined,
   VideoCameraOutlined,
+  RadarChartOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
@@ -23,6 +25,8 @@ import { getAllBadges, Badge as BadgeItem } from '../../api/badges'
 import { listMyEvaluations, Evaluation } from '../../api/evaluations'
 import { getReadingProgressList, ReadingProgressResponse } from '../../api/reading'
 import { getCheckInStatus, CheckInStatus } from '../../api/checkin'
+import LiteracyRadar from '../../components/LiteracyRadar'
+import { getLiteracyRadar, LiteracyRadarPayload } from '../../api/profile'
 
 const { Title, Text } = Typography
 const { TabPane } = Tabs
@@ -190,6 +194,9 @@ const Profile: React.FC = () => {
   const [checkinStatus, setCheckinStatus] = useState<CheckInStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [evalFormTarget, setEvalFormTarget] = useState<{ type: 'project' | 'sub'; id: number } | null>(null)
+  const [literacyRadar, setLiteracyRadar] = useState<LiteracyRadarPayload | null>(null)
+  const [literacyLoading, setLiteracyLoading] = useState(true)
+  const [literacyError, setLiteracyError] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -197,23 +204,33 @@ const Profile: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true)
+    setLiteracyLoading(true)
+    setLiteracyError(false)
     try {
-      const [badgesRes, materialsRes, evalsRes, progressRes, checkinRes] = await Promise.all([
+      const [badgesRes, materialsRes, evalsRes, progressRes, checkinRes, radarRes] = await Promise.all([
         getAllBadges(),
         getMaterials(),
         listMyEvaluations(),
         getReadingProgressList(),
         getCheckInStatus(),
+        getLiteracyRadar().catch(() => {
+          setLiteracyError(true)
+          return null
+        }),
       ])
       setBadges(badgesRes.data)
       setMaterials(materialsRes.data)
       setEvaluations(evalsRes.data)
       setProgressList(progressRes.data)
       setCheckinStatus(checkinRes.data)
+      if (radarRes) {
+        setLiteracyRadar(radarRes.data)
+      }
     } catch (error) {
       // Error handled silently
     } finally {
       setLoading(false)
+      setLiteracyLoading(false)
     }
   }
 
@@ -307,7 +324,68 @@ const Profile: React.FC = () => {
         </div>
       </Card>
 
-      <Tabs defaultActiveKey="materials" className="profile-tabs">
+      <Tabs defaultActiveKey="literacy" className="profile-tabs">
+        {/* Literacy Radar Tab */}
+        <TabPane tab={<span><RadarChartOutlined /> 素养画像</span>} key="literacy">
+          {literacyLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <Spin size="large" />
+            </div>
+          ) : literacyError ? (
+            <Card>
+              <Empty description={
+                <div>
+                  <Text className="block mb-3">数据加载失败</Text>
+                  <Button icon={<ReloadOutlined />} onClick={fetchData}>重试</Button>
+                </div>
+              } />
+            </Card>
+          ) : !literacyRadar || literacyRadar.overall_score === null ? (
+            <Card>
+              <Empty description={
+                <div>
+                  <Text className="block mb-3">先去阅读 / 完成项目，雷达图会随你成长</Text>
+                  <Button type="primary" onClick={() => window.location.href = '/learning'}>
+                    前往学习中心
+                  </Button>
+                </div>
+              } />
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2">
+                <LiteracyRadar data={literacyRadar} />
+              </Card>
+              <Card>
+                <Title level={5} className="!mb-4 flex items-center gap-2">
+                  <TrophyOutlined className="text-zhusha" />
+                  综合得分
+                </Title>
+                <div className="text-center py-6">
+                  <div className="text-6xl font-bold text-zhusha mb-2">
+                    {literacyRadar.overall_score}
+                  </div>
+                  <Text className="text-danmo block mb-1">/ 100</Text>
+                  <Text className="text-mohei text-lg font-medium">{literacyRadar.level_text}</Text>
+                </div>
+              </Card>
+              {literacyRadar.summary_text && (
+                <Card className="lg:col-span-3">
+                  <Title level={5} className="!mb-3 flex items-center gap-2">
+                    <FileTextOutlined className="text-shiqing" />
+                    成长建议
+                  </Title>
+                  <Text className="text-mohei">{literacyRadar.summary_text}</Text>
+                  <div className="flex items-center gap-3 mt-4 text-xs text-danmo">
+                    <span>数据更新于 {new Date(literacyRadar.generated_at).toLocaleString()}</span>
+                    <Button size="small" icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+        </TabPane>
+
         {/* Materials Tab */}
         <TabPane tab={<span><FileTextOutlined /> 学习素材</span>} key="materials">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
