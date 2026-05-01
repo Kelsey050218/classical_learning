@@ -157,10 +157,10 @@ def _compute_behavior_scores(user_id: int, db: Session) -> dict[str, Optional[fl
     ).scalar() or 0
 
     thirty_days_ago = date.today() - timedelta(days=30)
-    study_seconds_30d = db.query(func.coalesce(func.sum(StudyTimeLog.duration_seconds), 0)).filter(
+    study_seconds_30d = float(db.query(func.coalesce(func.sum(StudyTimeLog.duration_seconds), 0)).filter(
         StudyTimeLog.user_id == user_id,
         StudyTimeLog.session_date >= thirty_days_ago,
-    ).scalar() or 0
+    ).scalar() or 0)
     study_hours_30d = study_seconds_30d / 3600.0
 
     checkin_total = db.query(func.count(CheckIn.id)).filter(
@@ -190,12 +190,12 @@ def _compute_behavior_scores(user_id: int, db: Session) -> dict[str, Optional[fl
     # 复原诊断/排序正确率
     diag_total = db.query(func.count(RestorationDiagnostic.id)).scalar() or 0
     sort_total = db.query(func.count(RestorationNode.id)).scalar() or 0
-    diag_correct_sum = db.query(func.coalesce(func.sum(RestorationProgress.diagnostic_correct), 0)).filter(
+    diag_correct_sum = float(db.query(func.coalesce(func.sum(RestorationProgress.diagnostic_correct), 0)).filter(
         RestorationProgress.user_id == user_id
-    ).scalar() or 0
-    sort_correct_sum = db.query(func.coalesce(func.sum(RestorationProgress.sorting_correct), 0)).filter(
+    ).scalar() or 0)
+    sort_correct_sum = float(db.query(func.coalesce(func.sum(RestorationProgress.sorting_correct), 0)).filter(
         RestorationProgress.user_id == user_id
-    ).scalar() or 0
+    ).scalar() or 0)
     diag_rate = (diag_correct_sum / diag_total) if diag_total > 0 else 0.0
     sort_rate = (sort_correct_sum / sort_total) if sort_total > 0 else 0.0
 
