@@ -8,8 +8,7 @@ load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./test.db"
-    # "mysql+pymysql://classics_user:classics_pass@localhost:3306/classics_learning?charset=utf8mb4"
+    "mysql+pymysql://root:REDACTED@localhost:3306/classics_learning?charset=utf8mb4"
 )
 
 engine = create_engine(DATABASE_URL)
