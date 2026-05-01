@@ -13,7 +13,7 @@ from app.routers import (
     timeline_nodes, ai_script, admin, annotation_demos, reading_cards,
     evaluations, quizzes, checkin, badges, materials, study_time, ai_chat,
     bookmarks, highlights, oss, notes, notifications,
-    restoration,
+    restoration, profile,
 )
 from app.models.user import User  # Import to ensure table is created
 from app.models.chapter import Chapter  # Import to ensure table is created
@@ -83,6 +83,7 @@ app.include_router(oss.router, prefix="/api")
 app.include_router(notes.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(restoration.router, prefix="/api")
+app.include_router(profile.router, prefix="/api")
 
 @app.get("/health")
 def health_check():
