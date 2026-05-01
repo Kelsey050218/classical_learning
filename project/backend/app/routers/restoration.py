@@ -187,6 +187,8 @@ def submit_diagnostic(
 
     progress = get_or_create_progress(db, current_user.id, chapter_id)
     progress.diagnostic_correct = correct
+    if progress.current_step == RepairStep.locked:
+        progress.current_step = RepairStep.diagnostic
     if correct == len(diagnostics):
         progress.current_step = RepairStep.sorting
     db.commit()

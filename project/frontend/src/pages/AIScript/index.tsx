@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Typography, Select, Input, Button, Card as AntCard, message, Spin, Table, Collapse } from 'antd'
-import { FileTextOutlined, RocketOutlined, SaveOutlined, CheckCircleOutlined, BulbOutlined, VideoCameraOutlined, AudioOutlined, EyeOutlined, SkinOutlined, HeartOutlined } from '@ant-design/icons'
+import { FileTextOutlined, RocketOutlined, SaveOutlined, CheckCircleOutlined, BulbOutlined, VideoCameraOutlined, AudioOutlined, EyeOutlined, SkinOutlined, HeartOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import { generateScript, ScriptGenerateResponse } from '../../api/aiScript'
 import { createWork } from '../../api/works'
@@ -19,6 +20,7 @@ const styleOptions = [
 ]
 
 const AIScript: React.FC = () => {
+  const navigate = useNavigate()
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null)
   const [scene, setScene] = useState('')
@@ -130,6 +132,14 @@ const AIScript: React.FC = () => {
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-5xl mx-auto">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/learning')}
+          className="mb-4"
+        >
+          返回学习中心
+        </Button>
+
         {/* Header */}
         <div className="text-center mb-8">
           <Title level={2} className="font-display !mb-2">

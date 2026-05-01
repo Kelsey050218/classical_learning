@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Spin, Empty, message, Modal } from 'antd'
+import { Typography, Spin, Empty, message, Modal, Button as AntButton } from 'antd'
 import {
   BookOutlined,
   SoundOutlined,
@@ -448,6 +448,14 @@ const TimelinePage: React.FC = () => {
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-6xl mx-auto">
+          <AntButton
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/learning')}
+            className="mb-4"
+          >
+            返回学习中心
+          </AntButton>
+
           {/* Header */}
           <div className="text-center mb-12">
             <Title level={2} className="font-display !mb-2 text-mohei">

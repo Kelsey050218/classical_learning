@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Typography, Spin, Empty, Card as AntCard, Button, Input, Radio, message, Badge, Modal } from 'antd'
-import { MessageOutlined, LikeOutlined, DislikeOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { MessageOutlined, LikeOutlined, DislikeOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import EvaluationForm from '../../components/EvaluationForm'
 import { listTopics, listPosts, createPost, votePost } from '../../api/forum'
@@ -160,6 +160,14 @@ const Forum: React.FC = () => {
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-5xl mx-auto">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/learning')}
+          className="mb-4"
+        >
+          返回学习中心
+        </Button>
+
         {/* Header */}
         <div className="text-center mb-8">
           <Title level={2} className="font-display !mb-2">

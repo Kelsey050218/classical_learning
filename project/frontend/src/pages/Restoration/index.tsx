@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Spin, Empty, Progress } from 'antd'
-import { BookOutlined } from '@ant-design/icons'
+import { Typography, Spin, Empty, Button } from 'antd'
+import { BookOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import { listChapters, getProgress, RestorationChapter, Progress as RestorationProgress } from '../../api/restoration'
-import { useRepairLevel } from '../../hooks/useRepairLevel'
 
 const { Title, Text } = Typography
 
@@ -42,8 +41,7 @@ const RestorationHall: React.FC = () => {
   }, [])
 
   const progressMap = Object.fromEntries(progressList.map(p => [p.chapter_id, p]))
-  const completedCount = progressList.filter(p => p.current_step === 'completed').length
-  const { name: levelName, color: levelColor } = useRepairLevel(completedCount)
+  const minSortOrder = chapters.length > 0 ? Math.min(...chapters.map(c => c.sort_order)) : 0
 
   if (loading) {
     return (
@@ -58,36 +56,22 @@ const RestorationHall: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto px-4 py-8">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/learning')}
+          className="mb-4"
+        >
+          返回学习中心
+        </Button>
+
         {/* Header */}
         <div className="text-center mb-10">
           <Title level={2} className="font-display !mb-2">
             断简残编·经典复原室
           </Title>
           <Text className="text-danmo">
-            跟着朱自清，修复十三部中华经典
+            跟着朱自清，修复中华经典
           </Text>
-        </div>
-
-        {/* Stats bar */}
-        <div className="flex items-center justify-between mb-8 p-4 rounded-xl bg-white/60 border border-[#D4A574]/30">
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <Text className="text-danmo text-xs block">已完成</Text>
-              <Text className="text-2xl font-bold text-[#2F2F2F]">{completedCount}/13</Text>
-            </div>
-            <div className="w-px h-10 bg-[#D4A574]/30" />
-            <div className="text-center">
-              <Text className="text-danmo text-xs block">修复师等级</Text>
-              <Text className="text-lg font-bold" style={{ color: levelColor }}>{levelName}</Text>
-            </div>
-          </div>
-          <Progress
-            percent={Math.round((completedCount / 13) * 100)}
-            strokeColor={levelColor}
-            trailColor="#F5F2EB"
-            size="small"
-            className="w-40"
-          />
         </div>
 
         {chapters.length === 0 ? (
@@ -96,7 +80,10 @@ const RestorationHall: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {chapters.map(ch => {
               const progress = progressMap[ch.id]
-              const status = progress?.current_step || 'locked'
+              const rawStatus = progress?.current_step
+              const status = rawStatus && rawStatus !== 'locked'
+                ? rawStatus
+                : (ch.sort_order === minSortOrder ? 'diagnostic' : 'locked')
               const isCompleted = status === 'completed'
               const isLocked = status === 'locked'
 
