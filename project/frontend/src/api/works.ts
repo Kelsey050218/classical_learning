@@ -20,6 +20,7 @@ export interface WorkUpdate {
 export interface Work {
   id: number
   user_id: number
+  user_real_name?: string
   work_type: 'video' | 'audio' | 'script'
   title: string
   description?: string

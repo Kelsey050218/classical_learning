@@ -482,7 +482,6 @@ const MultiRubricForm: React.FC<{ rubrics: Rubric[]; onSubmit: (data: any) => vo
 const EvaluationForm: React.FC<EvaluationFormProps> = ({ projectId, subProjectId, onSaved }) => {
   const handleSubmit = async (data: any) => {
     try {
-      const targetId = subProjectId || projectId || 1
       await createEvaluation({
         project_id: projectId || 0,
         form_type: subProjectId ? `sub_project_${subProjectId}` : `project_${projectId}`,

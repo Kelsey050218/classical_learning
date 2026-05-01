@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Typography, Button, message, Spin, Card as AntCard, Calendar } from 'antd'
-import { CalendarOutlined, FireOutlined } from '@ant-design/icons'
+import { FireOutlined } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import { checkIn, getCheckInStatus, CheckInStatus } from '../../api/checkin'
 

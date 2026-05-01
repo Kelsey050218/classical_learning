@@ -6,6 +6,8 @@ export interface ForumTopic {
   description?: string
   status: string
   post_count: number
+  created_by: number
+  is_system: boolean
   created_at: string
 }
 
@@ -29,8 +31,22 @@ export interface PostCreate {
   stance?: string
 }
 
+export interface TopicCreate {
+  title: string
+  description?: string
+}
+
 export const listTopics = () =>
   apiClient.get('/forum/topics')
+
+export const createTopic = (data: TopicCreate) =>
+  apiClient.post('/forum/topics', data)
+
+export const closeTopic = (topicId: number) =>
+  apiClient.patch(`/forum/topics/${topicId}`, { status: 'closed' })
+
+export const deleteTopic = (topicId: number) =>
+  apiClient.delete(`/forum/topics/${topicId}`)
 
 export const listPosts = (topicId: number) =>
   apiClient.get(`/forum/topics/${topicId}/posts`)

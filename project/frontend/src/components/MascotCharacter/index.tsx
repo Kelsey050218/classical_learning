@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Drawer, Input, Button, Typography, message } from 'antd'
-import { SendOutlined, CloseOutlined, UserOutlined } from '@ant-design/icons'
+import { Drawer, Input, Button, Typography, message, Tooltip } from 'antd'
+import {
+  SendOutlined,
+  CloseOutlined,
+  UserOutlined,
+  AudioOutlined,
+  AudioMutedOutlined,
+} from '@ant-design/icons'
 import { getAccessToken } from '../../api/client'
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import { useDrag } from './useDrag'
 import './style.css'
 
@@ -27,9 +34,23 @@ const MascotCharacter: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
+  const {
+    supported: voiceSupported,
+    isListening,
+    isProcessing: voiceProcessing,
+    interim,
+    toggle: toggleVoice,
+    stop: stopVoice,
+  } = useSpeechRecognition({
+    onError: (msg) => message.error(msg),
+    onFinalResult: (text) => {
+      setInput((prev) => (prev ? `${prev}${text}` : text))
+    },
+  })
+
   const { position, isDragging, wasDragged, handlers } = useDrag({
     x: 0,
-    y: window.innerHeight - 252,
+    y: window.innerHeight - 340,
   })
 
   useEffect(() => {
@@ -39,6 +60,10 @@ const MascotCharacter: React.FC = () => {
   const handleSend = async () => {
     const text = input.trim()
     if (!text || loading) return
+
+    if (isListening) {
+      stopVoice()
+    }
 
     const userMsg: ChatMessage = { role: 'user', content: text }
     const updatedMessages = [...messages, userMsg]
@@ -154,6 +179,9 @@ const MascotCharacter: React.FC = () => {
     if (abortRef.current) {
       abortRef.current.abort()
     }
+    if (isListening) {
+      stopVoice()
+    }
     setChatVisible(false)
   }
 
@@ -171,7 +199,13 @@ const MascotCharacter: React.FC = () => {
         onClick={handleClick}
         title="AI 学习助手"
       >
-        <div className={`mascot-sprite ${isDragging ? 'dragging' : 'idle'}`} />
+        <div className={`mascot-sprite ${isDragging ? 'dragging' : 'idle'}`}>
+          <img
+            src="/images/mascot_character.png"
+            alt="AI 学习助手"
+            draggable={false}
+          />
+        </div>
       </div>
 
       {/* Chat Drawer */}
@@ -179,7 +213,7 @@ const MascotCharacter: React.FC = () => {
         title={
           <div className="flex items-center gap-2">
             <img
-              src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/mascot_avatar.png"
+              src="/images/mascot_character.png"
               alt="AI 学习助手"
               className="w-6 h-6 rounded-full flex-shrink-0 object-cover"
             />
@@ -221,7 +255,7 @@ const MascotCharacter: React.FC = () => {
                     <UserOutlined className="text-sm" />
                   ) : (
                     <img
-                      src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/mascot_avatar.png"
+                      src="/images/mascot_character.png"
                       alt="AI"
                       className="w-full h-full object-cover"
                     />
@@ -242,7 +276,7 @@ const MascotCharacter: React.FC = () => {
               <div className="flex gap-2">
                 <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                   <img
-                    src="https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/mascot_avatar.png"
+                    src="/images/mascot_character.png"
                     alt="AI"
                     className="w-full h-full object-cover"
                   />
@@ -261,16 +295,48 @@ const MascotCharacter: React.FC = () => {
 
           {/* Input */}
           <div className="mt-4 pt-3 border-t border-danmo-light">
+            {(isListening || voiceProcessing) && (
+              <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-zhusha-50 border border-zhusha-100">
+                <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zhusha opacity-60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-zhusha" />
+                </span>
+                <Text className="text-xs text-zhusha flex-1 truncate">
+                  {interim || (voiceProcessing ? '正在识别...' : '正在录音...')}
+                </Text>
+              </div>
+            )}
             <div className="flex gap-2">
               <Input.TextArea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="输入你的问题..."
+                placeholder={
+                  isListening
+                    ? '正在录音，再次点击麦克风结束'
+                    : voiceProcessing
+                    ? '正在识别...'
+                    : '输入你的问题，或点击麦克风语音输入'
+                }
                 autoSize={{ minRows: 1, maxRows: 4 }}
                 className="flex-1"
                 disabled={loading}
               />
+              {voiceSupported && (
+                <Tooltip title={isListening ? '点击停止录音' : '点击开始语音输入'}>
+                  <Button
+                    icon={isListening ? <AudioMutedOutlined /> : <AudioOutlined />}
+                    onClick={toggleVoice}
+                    disabled={loading || voiceProcessing}
+                    loading={voiceProcessing}
+                    className={
+                      isListening
+                        ? '!bg-zhusha !text-white !border-zhusha hover:!bg-zhusha-dark'
+                        : ''
+                    }
+                  />
+                </Tooltip>
+              )}
               <Button
                 type="primary"
                 icon={<SendOutlined />}

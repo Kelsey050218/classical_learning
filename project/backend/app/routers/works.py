@@ -91,8 +91,15 @@ def list_works(
             WorkLike.user_id == current_user.id
         ).all()
     )
+
+    # Attach user_real_name
+    user_ids = {w.user_id for w in works}
+    users = db.query(User.id, User.real_name).filter(User.id.in_(user_ids)).all()
+    user_map = {u.id: u.real_name for u in users}
+
     for work in works:
         work.user_liked = work.id in liked_work_ids
+        work.user_real_name = user_map.get(work.user_id)
 
     return works
 
@@ -110,6 +117,10 @@ def list_my_works(
         query = query.filter(Work.work_type == work_type)
 
     works = query.order_by(Work.created_at.desc()).all()
+
+    for work in works:
+        work.user_real_name = current_user.real_name
+
     return works
 
 
@@ -151,6 +162,10 @@ def get_work(
         WorkVote.work_id == work_id
     ).group_by(WorkVote.award_type).all()
     work.vote_counts = {award.value: count for award, count in vote_counts}
+
+    # Attach user_real_name
+    work_user = db.query(User).filter(User.id == work.user_id).first()
+    work.user_real_name = work_user.real_name if work_user else None
 
     return work
 

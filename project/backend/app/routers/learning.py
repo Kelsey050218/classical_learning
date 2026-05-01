@@ -26,6 +26,7 @@ PROJECTS = [
         "icon": "book",
         "sub_projects": [
             {"id": 1, "slug": "timeline", "name": "典籍时间轴", "path": "/timeline"},
+            {"id": 2, "slug": "restoration", "name": "断简残编·经典复原室", "path": "/restoration"},
         ],
         "unlock_condition": None,
     },

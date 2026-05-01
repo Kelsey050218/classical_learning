@@ -170,8 +170,12 @@ const Home: React.FC = () => {
 
         {/* Welcome section */}
         <Card variant="paper" className="relative overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-[0.12] pointer-events-none"
+            style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/%E7%94%9F%E6%88%90%E6%A8%AA%E5%B9%85%E5%9B%BE%E7%89%87.png)' }}
+          />
           <div className="absolute top-0 right-0 w-40 h-40 bg-zhusha-100 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 blur-2xl" />
-          <div className="relative">
+          <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <FireOutlined className="text-tenghuang" />
               <Badge variant="tenghuang">连续打卡 {streak} 天</Badge>

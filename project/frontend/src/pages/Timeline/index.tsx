@@ -1,42 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Spin, Empty, Tag, message, Modal, Popover } from 'antd'
+import { Typography, Spin, Empty, message, Modal, Button as AntButton } from 'antd'
 import {
   BookOutlined,
-  HistoryOutlined,
+  SoundOutlined,
+  FileTextOutlined,
+  TeamOutlined,
+  StarOutlined,
+  ReadOutlined,
+  FireOutlined,
+  RiseOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   CheckCircleOutlined,
   EditOutlined,
-  SoundOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  RiseOutlined,
-  StarOutlined,
-  FireOutlined,
-  ReadOutlined,
-  VideoCameraOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
-import Card from '../../components/UI/Card'
 import Button from '../../components/UI/Button'
 import EvaluationForm from '../../components/EvaluationForm'
-import { listTimelineNodes } from '../../api/timelineNodes'
+import { listTimelineNodes, type TimelineNode } from '../../api/timelineNodes'
 import { completeSubProject } from '../../api/learning'
+import { TIMELINE_ERAS } from '../../data/timelineEras'
+import useTimelineMarks from '../../hooks/useTimelineMarks'
+import EraDetailPanel from '../../components/Timeline/EraDetailPanel'
 
 const { Title, Text } = Typography
-
-interface TimelineNode {
-  id: number
-  era: string
-  period: string
-  title: string
-  content: string
-  key_points: string[]
-  sort_order: number
-  image_url?: string
-  video_urls?: string[]
-}
 
 const eraIcons: Record<string, React.ReactNode> = {
   '先秦': <SoundOutlined />,
@@ -379,6 +367,8 @@ const TimelinePage: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const detailRef = useRef<HTMLDivElement>(null)
 
+  const { marks, updateMark } = useTimelineMarks()
+
   useEffect(() => {
     const fetchNodes = async () => {
       try {
@@ -428,6 +418,14 @@ const TimelinePage: React.FC = () => {
     }
   }
 
+  // Find matching TimelineEra for selected node
+  const selectedEra = selectedNode
+    ? TIMELINE_ERAS.find(e => e.name === selectedNode.era) || null
+    : null
+  const prevEra = selectedEra
+    ? TIMELINE_ERAS[TIMELINE_ERAS.findIndex(e => e.id === selectedEra.id) - 1]
+    : undefined
+
   if (loading) {
     return (
       <Layout>
@@ -438,8 +436,7 @@ const TimelinePage: React.FC = () => {
     )
   }
 
-  // Split nodes into top and bottom rows (for image-style layout)
-  // If 7 nodes: top row = indices 0,1,2,3  bottom row = indices 4,5,6 (reversed visually)
+  // Split nodes into top and bottom rows
   const topRow = nodes.slice(0, Math.ceil(nodes.length / 2))
   const bottomRow = nodes.slice(Math.ceil(nodes.length / 2)).reverse()
 
@@ -451,162 +448,75 @@ const TimelinePage: React.FC = () => {
           style={{ backgroundImage: 'url(https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/backgrounds/learning.png)' }}
         />
         <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <Title level={2} className="font-display !mb-2 text-mohei">
-            经典常谈 · 诗第十二
-          </Title>
-          <Text className="text-danmo">
-            从先秦到明清，追溯中国古典诗歌的发展脉络
-          </Text>
-        </div>
+          <AntButton
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/learning')}
+            className="mb-4"
+          >
+            返回学习中心
+          </AntButton>
 
-        {nodes.length === 0 ? (
-          <Empty description="暂无时间轴数据" />
-        ) : (
-          <>
-            {/* Classic Timeline - Reference Image Style */}
-            <div className="relative mb-8 rounded-2xl p-8 overflow-hidden"
-                 style={{
-                   background: 'linear-gradient(135deg, #F5F2EB 0%, #EDE9E0 50%, #E8E4DC 100%)',
-                   boxShadow: 'inset 0 0 60px rgba(139, 69, 19, 0.05)'
-                 }}>
-              {/* Decorative background elements */}
-              <div className="absolute top-0 left-0 w-32 h-32 opacity-10 pointer-events-none"
-                   style={{ background: 'radial-gradient(circle, #8B6914 0%, transparent 70%)' }} />
-              <div className="absolute bottom-0 right-0 w-40 h-40 opacity-10 pointer-events-none"
-                   style={{ background: 'radial-gradient(circle, #8B4513 0%, transparent 70%)' }} />
+          {/* Header */}
+          <div className="text-center mb-12">
+            <Title level={2} className="font-display !mb-2 text-mohei">
+              经典常谈 · 诗第十二
+            </Title>
+            <Text className="text-danmo">
+              从先秦到明清，追溯中国古典诗歌的发展脉络
+            </Text>
+          </div>
 
-              {/* Scroll buttons */}
-              <button
-                onClick={() => scroll('left')}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors border border-danmo-light"
-              >
-                <ArrowLeftOutlined className="text-mohei" />
-              </button>
-              <button
-                onClick={() => scroll('right')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors border border-danmo-light"
-              >
-                <ArrowRightOutlined className="text-mohei" />
-              </button>
+          {nodes.length === 0 ? (
+            <Empty description="暂无时间轴数据" />
+          ) : (
+            <>
+              {/* Classic Timeline */}
+              <div className="relative mb-8 rounded-2xl p-8 overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #F5F2EB 0%, #EDE9E0 50%, #E8E4DC 100%)',
+                  boxShadow: 'inset 0 0 60px rgba(139, 69, 19, 0.05)'
+                }}>
+                {/* Decorative background elements */}
+                <div className="absolute top-0 left-0 w-32 h-32 opacity-10 pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, #8B6914 0%, transparent 70%)' }} />
+                <div className="absolute bottom-0 right-0 w-40 h-40 opacity-10 pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, #8B4513 0%, transparent 70%)' }} />
 
-              <div
-                ref={scrollRef}
-                className="overflow-x-auto hide-scrollbar px-10"
-                style={{ scrollbarWidth: 'none' }}
-              >
-                <div className="relative min-w-max py-4">
-                  {/* Top Row */}
-                  <div className="flex items-end justify-center gap-6 mb-0 pb-6 relative"
-                       style={{ paddingRight: '40px' }}>
-                    {topRow.map((node, idx) => {
-                      const isSelected = selectedNode?.id === node.id
-                      const icon = eraIcons[node.era] || <BookOutlined />
-                      const gradient = eraGradients[node.era] || 'from-danmo/20 to-danmo/10'
-                      const borderColor = eraBorderColors[node.era] || 'border-danmo/30'
-                      const isLastTop = idx === topRow.length - 1
+                {/* Scroll buttons */}
+                <button
+                  onClick={() => scroll('left')}
+                  aria-label="向左滚动"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors border border-danmo-light"
+                >
+                  <ArrowLeftOutlined className="text-mohei" />
+                </button>
+                <button
+                  onClick={() => scroll('right')}
+                  aria-label="向右滚动"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-colors border border-danmo-light"
+                >
+                  <ArrowRightOutlined className="text-mohei" />
+                </button>
 
-                      return (
-                        <div key={node.id} className="flex flex-col items-center relative"
-                             style={{ minWidth: '180px', maxWidth: '200px' }}>
-                          {/* Card */}
-                          <div
-                            className={`w-full rounded-xl border-2 bg-gradient-to-br ${gradient} ${borderColor} overflow-hidden transition-all cursor-pointer hover:shadow-lg ${
-                              isSelected ? 'ring-2 ring-zhusha scale-105 shadow-xl' : 'shadow-md'
-                            }`}
-                            onClick={() => setSelectedNode(isSelected ? null : node)}
-                            style={{ backgroundColor: 'rgba(255, 253, 248, 0.9)' }}
-                          >
-                            {/* Image area */}
-                            <div className="h-28 w-full bg-gradient-to-b from-xuanzhi-warm to-white flex items-center justify-center relative overflow-hidden">
-                              {node.image_url ? (
-                                <img
-                                  src={node.image_url}
-                                  alt={node.era}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <>
-                                  <div className="absolute inset-0 opacity-20"
-                                       style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M0 0h20v20H0V0zm10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14z\'/%3E%3C/g%3E%3C/svg%3E")' }} />
-                                  <div className="text-4xl opacity-40 text-zhusha">
-                                    {icon}
-                                  </div>
-                                </>
-                              )}
-                              {/* Decorative corner */}
-                              <div className="absolute top-1 right-1 w-6 h-6 border-t-2 border-r-2 border-zhusha/20 rounded-tr-md" />
-                              <div className="absolute bottom-1 left-1 w-6 h-6 border-b-2 border-l-2 border-zhusha/20 rounded-bl-md" />
-                            </div>
-                            {/* Content */}
-                            <div className="p-3 text-center">
-                              <Text className="text-sm font-medium text-mohei block leading-tight">
-                                {node.era}{node.title}
-                              </Text>
-                              <Text className="text-xs text-danmo mt-1 block">
-                                {node.period}
-                              </Text>
-                            </div>
-                          </div>
-
-                          {/* Connector line down to main axis */}
-                          <div className="w-px h-5 bg-zhusha/60 mt-1" />
-
-                          {/* Dot on main axis */}
-                          <div className="w-3 h-3 rounded-full bg-zhusha border-2 border-white shadow-md z-10 relative" />
-
-                          {/* Horizontal line to next */}
-                          {!isLastTop && (
-                            <div className="absolute bottom-0 left-1/2 w-full h-0.5 bg-gradient-to-r from-zhusha to-zhusha/60"
-                                 style={{ transform: 'translateY(-5px)' }} />
-                          )}
-                          {isLastTop && bottomRow.length > 0 && (
-                            <div className="absolute bottom-0 left-1/2 w-full h-0.5 bg-gradient-to-r from-zhusha to-zhusha/60"
-                                 style={{ transform: 'translateY(-5px)' }} />
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Main Axis Line */}
-                  <div className="relative h-1 mx-4" style={{ marginRight: '44px' }}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-zhusha via-zhusha-light to-zhusha rounded-full" />
-                    {/* Arrow at the end */}
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1">
-                      <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
-                        <path d="M0 8H18M18 8L11 1M18 8L11 15" stroke="#C73E3A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Bottom Row */}
-                  {bottomRow.length > 0 && (
-                    <div className="flex items-start justify-center gap-6 mt-0 pt-6 relative"
-                         style={{ paddingRight: '40px' }}>
-                      {bottomRow.map((node, idx) => {
+                <div
+                  ref={scrollRef}
+                  className="overflow-x-auto hide-scrollbar px-10"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  <div className="relative min-w-max py-4">
+                    {/* Top Row */}
+                    <div className="flex items-end justify-center gap-6 mb-0 pb-6 relative"
+                      style={{ paddingRight: '40px' }}>
+                      {topRow.map((node, idx) => {
                         const isSelected = selectedNode?.id === node.id
                         const icon = eraIcons[node.era] || <BookOutlined />
                         const gradient = eraGradients[node.era] || 'from-danmo/20 to-danmo/10'
                         const borderColor = eraBorderColors[node.era] || 'border-danmo/30'
-                        const isLastBottom = idx === bottomRow.length - 1
+                        const isLastTop = idx === topRow.length - 1
 
                         return (
                           <div key={node.id} className="flex flex-col items-center relative"
-                               style={{ minWidth: '180px', maxWidth: '200px' }}>
-                            {/* Dot on main axis */}
-                            <div className="w-3 h-3 rounded-full bg-zhusha border-2 border-white shadow-md z-10 relative mb-1" />
-
-                            {/* Connector line up from main axis */}
-                            <div className="w-px h-5 bg-zhusha/60 mb-1" />
-
-                            {/* Horizontal line from prev */}
-                            {!isLastBottom && (
-                              <div className="absolute top-0 left-1/2 w-full h-0.5 bg-gradient-to-r from-zhusha/60 to-zhusha"
-                                   style={{ transform: 'translateY(-5px)' }} />
-                            )}
-
+                            style={{ minWidth: '180px', maxWidth: '200px' }}>
                             {/* Card */}
                             <div
                               className={`w-full rounded-xl border-2 bg-gradient-to-br ${gradient} ${borderColor} overflow-hidden transition-all cursor-pointer hover:shadow-lg ${
@@ -626,12 +536,13 @@ const TimelinePage: React.FC = () => {
                                 ) : (
                                   <>
                                     <div className="absolute inset-0 opacity-20"
-                                         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M0 0h20v20H0V0zm10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14z\'/%3E%3C/g%3E%3C/svg%3E")' }} />
+                                      style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M0 0h20v20H0V0zm10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14z\'/%3E%3C/g%3E%3C/svg%3E")' }} />
                                     <div className="text-4xl opacity-40 text-zhusha">
                                       {icon}
                                     </div>
                                   </>
                                 )}
+                                {/* Decorative corner */}
                                 <div className="absolute top-1 right-1 w-6 h-6 border-t-2 border-r-2 border-zhusha/20 rounded-tr-md" />
                                 <div className="absolute bottom-1 left-1 w-6 h-6 border-b-2 border-l-2 border-zhusha/20 rounded-bl-md" />
                               </div>
@@ -645,125 +556,151 @@ const TimelinePage: React.FC = () => {
                                 </Text>
                               </div>
                             </div>
+
+                            {/* Connector line down to main axis */}
+                            <div className="w-px h-5 bg-zhusha/60 mt-1" />
+
+                            {/* Dot on main axis */}
+                            <div className="w-3 h-3 rounded-full bg-zhusha border-2 border-white shadow-md z-10 relative" />
+
+                            {/* Horizontal line to next */}
+                            {!isLastTop && (
+                              <div className="absolute bottom-0 left-1/2 w-full h-0.5 bg-gradient-to-r from-zhusha to-zhusha/60"
+                                style={{ transform: 'translateY(-5px)' }} />
+                            )}
+                            {isLastTop && bottomRow.length > 0 && (
+                              <div className="absolute bottom-0 left-1/2 w-full h-0.5 bg-gradient-to-r from-zhusha to-zhusha/60"
+                                style={{ transform: 'translateY(-5px)' }} />
+                            )}
                           </div>
                         )
                       })}
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Detail Card */}
-            {selectedNode && (
-              <div ref={detailRef}>
-                <Card className="mb-8 animate-fadeIn">
-                  <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Tag color="blue">{selectedNode.era}</Tag>
-                    <Text className="text-danmo">{selectedNode.period}</Text>
-                  </div>
-                  <Title level={4} className="font-display !mb-1">
-                    {selectedNode.title}
-                  </Title>
-                  <div className="text-mohei leading-relaxed whitespace-pre-line">
-                    {selectedNode.content}
-                  </div>
-                  {selectedNode.key_points && selectedNode.key_points.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {selectedNode.key_points.map((point, idx) => {
-                        const detail = keyPointDetails[point]
-                        const tag = (
-                          <Tag
-                            key={idx}
-                            icon={<BookOutlined />}
-                            color="processing"
-                            className={detail ? 'cursor-help' : ''}
-                          >
-                            {point}
-                          </Tag>
-                        )
-                        if (!detail) return tag
-                        return (
-                          <Popover
-                            key={idx}
-                            content={
-                              <div className="max-w-sm text-mohei leading-relaxed whitespace-pre-line">
-                                {detail}
-                              </div>
-                            }
-                            title={
-                              <div className="flex items-center gap-2 font-display">
-                                <BookOutlined className="text-[#C73E3A]" />
-                                {point}
-                              </div>
-                            }
-                            placement="top"
-                            trigger="hover"
-                          >
-                            {tag}
-                          </Popover>
-                        )
-                      })}
+                    {/* Main Axis Line */}
+                    <div className="relative h-1 mx-4" style={{ marginRight: '44px' }}>
+                      <div className="absolute inset-0 bg-gradient-to-r from-zhusha via-zhusha-light to-zhusha rounded-full" />
+                      {/* Arrow at the end */}
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1">
+                        <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+                          <path d="M0 8H18M18 8L11 1M18 8L11 15" stroke="#C73E3A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
                     </div>
-                  )}
-                  {selectedNode.video_urls && selectedNode.video_urls.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <Text className="font-medium text-mohei flex items-center gap-2">
-                        <VideoCameraOutlined className="text-zhusha" />
-                        相关视频
-                      </Text>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {selectedNode.video_urls.map((url, idx) => {
-                          const [bvid, pageStr] = url.split('&')
-                          const page = pageStr ? pageStr.replace('page=', '') : '1'
+
+                    {/* Bottom Row */}
+                    {bottomRow.length > 0 && (
+                      <div className="flex items-start justify-center gap-6 mt-0 pt-6 relative"
+                        style={{ paddingRight: '40px' }}>
+                        {bottomRow.map((node, idx) => {
+                          const isSelected = selectedNode?.id === node.id
+                          const icon = eraIcons[node.era] || <BookOutlined />
+                          const gradient = eraGradients[node.era] || 'from-danmo/20 to-danmo/10'
+                          const borderColor = eraBorderColors[node.era] || 'border-danmo/30'
+                          const isLastBottom = idx === bottomRow.length - 1
+
                           return (
-                            <div key={idx} className="rounded-lg overflow-hidden border border-danmo-light bg-black">
-                              <iframe
-                                src={`https://player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&danmaku=0`}
-                                scrolling="no"
-                                frameBorder={0}
-                                allowFullScreen
-                                className="w-full"
-                                style={{ height: '220px' }}
-                              />
+                            <div key={node.id} className="flex flex-col items-center relative"
+                              style={{ minWidth: '180px', maxWidth: '200px' }}>
+                              {/* Dot on main axis */}
+                              <div className="w-3 h-3 rounded-full bg-zhusha border-2 border-white shadow-md z-10 relative mb-1" />
+
+                              {/* Connector line up from main axis */}
+                              <div className="w-px h-5 bg-zhusha/60 mb-1" />
+
+                              {/* Horizontal line from prev */}
+                              {!isLastBottom && (
+                                <div className="absolute top-0 left-1/2 w-full h-0.5 bg-gradient-to-r from-zhusha/60 to-zhusha"
+                                  style={{ transform: 'translateY(-5px)' }} />
+                              )}
+
+                              {/* Card */}
+                              <div
+                                className={`w-full rounded-xl border-2 bg-gradient-to-br ${gradient} ${borderColor} overflow-hidden transition-all cursor-pointer hover:shadow-lg ${
+                                  isSelected ? 'ring-2 ring-zhusha scale-105 shadow-xl' : 'shadow-md'
+                                }`}
+                                onClick={() => setSelectedNode(isSelected ? null : node)}
+                                style={{ backgroundColor: 'rgba(255, 253, 248, 0.9)' }}
+                              >
+                                {/* Image area */}
+                                <div className="h-28 w-full bg-gradient-to-b from-xuanzhi-warm to-white flex items-center justify-center relative overflow-hidden">
+                                  {node.image_url ? (
+                                    <img
+                                      src={node.image_url}
+                                      alt={node.era}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <>
+                                      <div className="absolute inset-0 opacity-20"
+                                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M0 0h20v20H0V0zm10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14z\'/%3E%3C/g%3E%3C/svg%3E")' }} />
+                                      <div className="text-4xl opacity-40 text-zhusha">
+                                        {icon}
+                                      </div>
+                                    </>
+                                  )}
+                                  <div className="absolute top-1 right-1 w-6 h-6 border-t-2 border-r-2 border-zhusha/20 rounded-tr-md" />
+                                  <div className="absolute bottom-1 left-1 w-6 h-6 border-b-2 border-l-2 border-zhusha/20 rounded-bl-md" />
+                                </div>
+                                {/* Content */}
+                                <div className="p-3 text-center">
+                                  <Text className="text-sm font-medium text-mohei block leading-tight">
+                                    {node.era}{node.title}
+                                  </Text>
+                                  <Text className="text-xs text-danmo mt-1 block">
+                                    {node.period}
+                                  </Text>
+                                </div>
+                              </div>
                             </div>
                           )
                         })}
                       </div>
-                    </div>
-                  )}
-                </div>
-                </Card>
-              </div>
-            )}
-
-            {/* Complete button */}
-            <div className="text-center py-8 border-t border-danmo-light">
-              {completed ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center gap-2 text-zhuqing">
-                    <CheckCircleOutlined />
-                    <Text className="text-zhuqing font-medium">已完成典籍时间轴学习</Text>
+                    )}
                   </div>
-                  <Button customVariant="ghost" customSize="sm" onClick={() => navigate('/learning')}>
-                    返回学习中心
-                  </Button>
                 </div>
-              ) : (
-                <Button
-                  customVariant="primary"
-                  onClick={handleComplete}
-                  loading={completing}
-                >
-                  <EditOutlined /> 完成典籍时间轴学习
-                </Button>
+              </div>
+
+              {/* Detail Panel */}
+              {selectedNode && selectedEra && (
+                <div ref={detailRef} className="mb-8">
+                  <EraDetailPanel
+                    era={selectedEra}
+                    prevEra={prevEra}
+                    mark={marks[selectedEra.id]}
+                    onMarkChange={updateMark}
+                    node={selectedNode}
+                    keyPointDetails={keyPointDetails}
+                  />
+                </div>
               )}
-            </div>
-          </>
-        )}
+
+              {/* Complete button */}
+              <div className="text-center py-8 border-t border-danmo-light">
+                {completed ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-zhuqing">
+                      <CheckCircleOutlined />
+                      <Text className="text-zhuqing font-medium">已完成典籍时间轴学习</Text>
+                    </div>
+                    <Button customVariant="ghost" customSize="sm" onClick={() => navigate('/learning')}>
+                      返回学习中心
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    customVariant="primary"
+                    onClick={handleComplete}
+                    loading={completing}
+                  >
+                    <EditOutlined /> 完成典籍时间轴学习
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
 
       <Modal
         title="项目评价量表"
@@ -781,7 +718,6 @@ const TimelinePage: React.FC = () => {
           }}
         />
       </Modal>
-
     </Layout>
   )
 }

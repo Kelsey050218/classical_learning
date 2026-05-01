@@ -15,37 +15,37 @@ BADGE_DEFINITIONS = [
         "type": "reading_star",
         "name": "阅读之星",
         "description": "完成所有章节的阅读",
-        "icon": "/images/badges/阅读之星.png",
+        "icon": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/badges/%E9%98%85%E8%AF%BB%E4%B9%8B%E6%98%9F.png",
     },
     {
         "type": "thinking_star",
         "name": "思辨之星",
         "description": "在论坛发表3篇以上观点",
-        "icon": "/images/badges/思辨之星.png",
+        "icon": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/badges/%E6%80%9D%E8%BE%A8%E4%B9%8B%E6%98%9F.png",
     },
     {
         "type": "creation_star",
         "name": "创作之星",
         "description": "发布第一件作品",
-        "icon": "/images/badges/创作之星.png",
+        "icon": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/badges/%E5%88%9B%E4%BD%9C%E4%B9%8B%E6%98%9F.png",
     },
     {
         "type": "recitation_star",
         "name": "朗诵之星",
         "description": "发布音频作品",
-        "icon": "/images/badges/朗诵之星.png",
+        "icon": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/badges/%E6%9C%97%E8%AF%B5%E4%B9%8B%E6%98%9F.png",
     },
     {
         "type": "appreciation_star",
         "name": "鉴赏之星",
         "description": "发布视频作品",
-        "icon": "/images/badges/鉴赏之星.png",
+        "icon": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/badges/%E9%89%B4%E8%B5%8F%E4%B9%8B%E6%98%9F.png",
     },
     {
         "type": "checkin_star",
         "name": "打卡之星",
         "description": "连续打卡7天",
-        "icon": "/images/badges/打卡之星.png",
+        "icon": "https://kelsey-webdemo.oss-cn-hangzhou.aliyuncs.com/jingdianchangtan/images/badges/%E6%89%93%E5%8D%A1%E4%B9%8B%E6%98%9F.png",
     },
 ]
 

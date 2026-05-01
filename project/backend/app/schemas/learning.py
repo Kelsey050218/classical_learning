@@ -28,7 +28,18 @@ class ForumTopicListResponse(BaseModel):
     description: Optional[str] = None
     status: TopicStatus
     post_count: int = 0
+    created_by: int
+    is_system: bool = False
     created_at: datetime
+
+
+class ForumTopicCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+
+
+class ForumTopicUpdate(BaseModel):
+    status: Optional[TopicStatus] = None
 
 
 class ForumPostCreate(BaseModel):

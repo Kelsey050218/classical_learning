@@ -26,6 +26,7 @@ class WorkResponse(BaseModel):
 
     id: int
     user_id: int
+    user_real_name: Optional[str] = None
     work_type: WorkType
     title: str
     description: Optional[str] = None
@@ -49,6 +50,7 @@ class WorkListResponse(BaseModel):
 
     id: int
     user_id: int
+    user_real_name: Optional[str] = None
     work_type: WorkType
     title: str
     description: Optional[str] = None

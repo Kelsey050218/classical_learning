@@ -6,24 +6,24 @@ import {
   FileTextOutlined,
   ClockCircleOutlined,
   BookOutlined,
-  StarOutlined,
   FireOutlined,
   EditOutlined,
-  PlusOutlined,
   SoundOutlined,
   VideoCameraOutlined,
+  RadarChartOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
 import Layout from '../../components/Layout'
 import Card from '../../components/UI/Card'
 import Badge from '../../components/UI/Badge'
 import BadgeWall from '../../components/BadgeWall'
-import EvaluationForm from '../../components/EvaluationForm'
 import { useAuthStore } from '../../stores/auth'
 import { getMaterials, Materials } from '../../api/materials'
 import { getAllBadges, Badge as BadgeItem } from '../../api/badges'
-import { listMyEvaluations, Evaluation } from '../../api/evaluations'
 import { getReadingProgressList, ReadingProgressResponse } from '../../api/reading'
 import { getCheckInStatus, CheckInStatus } from '../../api/checkin'
+import LiteracyRadar from '../../components/LiteracyRadar'
+import { getLiteracyRadar, LiteracyRadarPayload } from '../../api/profile'
 
 const { Title, Text } = Typography
 const { TabPane } = Tabs
@@ -51,146 +51,16 @@ const CARD_TEMPLATE_NAMES: Record<number, string> = {
   12: '总结反思卡',
 }
 
-const RUBRIC_NAMES: Record<string, { title: string; project: string }> = {
-  'sub_project_1': { title: '典籍时间轴·历史阅读法实践', project: '项目一' },
-  'sub_project_4': { title: '经典思想论坛·议题辩论交锋', project: '项目二' },
-  'sub_project_5': { title: 'AI短视频脚本创作', project: '项目二' },
-  'sub_project_8': { title: '经典声演·配乐朗诵创作', project: '项目三' },
-  'sub_project_9': { title: '典籍长视频剪辑·影像创作', project: '项目三' },
-  'project_1': { title: '典籍时间轴·历史阅读法实践', project: '项目一' },
-  'project_2': { title: '经典思想论坛·议题辩论交锋', project: '项目二' },
-  'project_3': { title: '经典声演与视频创作', project: '项目三' },
-  'project1': { title: '项目一评价（旧版）', project: '项目一' },
-  'project2': { title: '项目二评价（旧版）', project: '项目二' },
-  'project3': { title: '项目三评价（旧版）', project: '项目三' },
-}
-
-const getRubricName = (formType: string, projectId: number) => {
-  if (RUBRIC_NAMES[formType]) return RUBRIC_NAMES[formType]
-  if (formType.startsWith('sub_project_')) {
-    return { title: `子项目评价 · ${formType}`, project: '' }
-  }
-  if (formType.startsWith('project_')) {
-    const pid = formType.split('_')[1]
-    return { title: `项目${pid}评价`, project: `项目${pid}` }
-  }
-  return { title: `项目${projectId}评价 · ${formType}`, project: `项目${projectId}` }
-}
-
-const friendlyScoreKey = (key: string) => {
-  if (key.includes('_')) {
-    const [prefix, idx] = key.split('_')
-    return `${prefix} · 条目${Number(idx) + 1}`
-  }
-  return key
-}
-
-const groupScoresByDimension = (scores: Record<string, any>) => {
-  const groups: Record<string, { key: string; score: number }[]> = {}
-  Object.entries(scores).forEach(([key, value]) => {
-    const num = typeof value === 'number' ? value : Number(value)
-    if (isNaN(num)) {
-      if (!groups['评分项']) groups['评分项'] = []
-      groups['评分项'].push({ key, score: 0 })
-      return
-    }
-    const match = key.match(/^(.+)_(\d+)$/)
-    if (match) {
-      const dim = match[1]
-      if (!groups[dim]) groups[dim] = []
-      groups[dim].push({ key: `${dim}·条目${Number(match[2]) + 1}`, score: num })
-    } else {
-      if (!groups['其他']) groups['其他'] = []
-      groups['其他'].push({ key, score: num })
-    }
-  })
-  return groups
-}
-
-const isNumericScores = (scores: Record<string, any>) => {
-  return Object.values(scores).some(v => typeof v === 'number' && !isNaN(v))
-}
-
-const EvaluationRecordCard: React.FC<{ evaluation: Evaluation }> = ({ evaluation: e }) => {
-  const meta = getRubricName(e.form_type, e.project_id)
-  const numeric = isNumericScores(e.scores)
-
-  return (
-    <AntCard
-      title={
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{meta.title}</span>
-          {meta.project && <Tag color="blue" className="text-xs">{meta.project}</Tag>}
-        </div>
-      }
-      extra={<Text className="text-danmo">{new Date(e.created_at).toLocaleDateString()}</Text>}
-    >
-      {numeric ? (
-        <div className="space-y-3 mb-4">
-          {Object.entries(groupScoresByDimension(e.scores)).map(([dim, items]) => (
-            <div key={dim} className="border border-danmo-light rounded-lg overflow-hidden">
-              <div className="bg-xuanzhi px-3 py-2 font-medium text-sm text-mohei">{dim}</div>
-              <div className="p-3 space-y-2">
-                {items.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <Text className="text-xs text-danmo flex-1 truncate">{item.key}</Text>
-                    <div className="w-20 h-2 bg-danmo-light rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(item.score / 5) * 100}%`,
-                          backgroundColor: item.score >= 4 ? '#52c41a' : item.score >= 3 ? '#faad14' : '#C73E3A'
-                        }}
-                      />
-                    </div>
-                    <Text className="text-sm font-bold text-mohei w-10 text-right">{item.score}分</Text>
-                  </div>
-                ))}
-                <div className="pt-1 border-t border-danmo-light flex items-center justify-between">
-                  <Text className="text-xs text-danmo">维度均分</Text>
-                  <Text className="text-sm font-bold text-shiqing">
-                    {(items.reduce((s, i) => s + i.score, 0) / items.length).toFixed(1)}分
-                  </Text>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          {Object.entries(e.scores).map(([k, v]) => (
-            <div key={k} className="bg-xuanzhi-warm rounded-lg p-2 text-center">
-              <Text className="text-xs text-danmo block truncate">{friendlyScoreKey(k)}</Text>
-              <Text className="font-bold text-mohei text-lg">{String(v)}</Text>
-            </div>
-          ))}
-        </div>
-      )}
-      {e.self_comment && (
-        <div className="bg-xuanzhi rounded-lg p-3">
-          <Text className="text-xs text-danmo block mb-1">自我评语</Text>
-          <Text className="text-sm text-mohei">{e.self_comment}</Text>
-        </div>
-      )}
-      {e.evaluator_comment && (
-        <div className="bg-zhusha-50 rounded-lg p-3 mt-2">
-          <Text className="text-xs text-zhusha block mb-1">教师评语</Text>
-          <Text className="text-sm text-mohei">{e.evaluator_comment}</Text>
-        </div>
-      )}
-    </AntCard>
-  )
-}
-
 const Profile: React.FC = () => {
   const { user } = useAuthStore()
   const [badges, setBadges] = useState<BadgeItem[]>([])
   const [materials, setMaterials] = useState<Materials | null>(null)
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [progressList, setProgressList] = useState<ReadingProgressResponse[]>([])
   const [checkinStatus, setCheckinStatus] = useState<CheckInStatus | null>(null)
   const [loading, setLoading] = useState(true)
-  const [evalFormTarget, setEvalFormTarget] = useState<{ type: 'project' | 'sub'; id: number } | null>(null)
+  const [literacyRadar, setLiteracyRadar] = useState<LiteracyRadarPayload | null>(null)
+  const [literacyLoading, setLiteracyLoading] = useState(true)
+  const [literacyError, setLiteracyError] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -198,23 +68,35 @@ const Profile: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true)
+    setLiteracyLoading(true)
+    setLiteracyError(false)
     try {
-      const [badgesRes, materialsRes, evalsRes, progressRes, checkinRes] = await Promise.all([
+      const [badgesRes, materialsRes, progressRes, checkinRes, radarRes] = await Promise.all([
         getAllBadges(),
         getMaterials(),
-        listMyEvaluations(),
         getReadingProgressList(),
         getCheckInStatus(),
+        getLiteracyRadar().catch((err) => {
+          if (err?.response?.status === 401) {
+            window.location.href = '/login'
+            return null
+          }
+          setLiteracyError(true)
+          return null
+        }),
       ])
       setBadges(badgesRes.data)
       setMaterials(materialsRes.data)
-      setEvaluations(evalsRes.data)
       setProgressList(progressRes.data)
       setCheckinStatus(checkinRes.data)
+      if (radarRes) {
+        setLiteracyRadar(radarRes.data)
+      }
     } catch (error) {
       // Error handled silently
     } finally {
       setLoading(false)
+      setLiteracyLoading(false)
     }
   }
 
@@ -308,65 +190,132 @@ const Profile: React.FC = () => {
         </div>
       </Card>
 
-      <Tabs defaultActiveKey="materials" className="profile-tabs">
+      <Tabs defaultActiveKey="literacy" className="profile-tabs">
+        {/* Literacy Radar Tab */}
+        <TabPane tab={<span><RadarChartOutlined /> 素养画像</span>} key="literacy">
+          {literacyLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <Spin size="large" />
+            </div>
+          ) : literacyError ? (
+            <Card>
+              <Empty description={
+                <div>
+                  <Text className="block mb-3">数据加载失败</Text>
+                  <Button icon={<ReloadOutlined />} onClick={fetchData}>重试</Button>
+                </div>
+              } />
+            </Card>
+          ) : !literacyRadar || literacyRadar.overall_score === null ? (
+            <Card>
+              <Empty description={
+                <div>
+                  <Text className="block mb-3">先去阅读 / 完成项目，雷达图会随你成长</Text>
+                  <Button type="primary" onClick={() => window.location.href = '/learning'}>
+                    前往学习中心
+                  </Button>
+                </div>
+              } />
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card variant="paper" className="text-center">
+                  <ClockCircleOutlined className="text-shiqing text-2xl mb-2" />
+                  <Statistic
+                    title="总阅读时长"
+                    value={`${Math.floor(stats.total_reading_time / 60)}h`}
+                    valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
+                  />
+                </Card>
+                <Card variant="paper" className="text-center">
+                  <BookOutlined className="text-zhusha text-2xl mb-2" />
+                  <Statistic
+                    title="完成章节"
+                    value={stats.chapters_completed}
+                    suffix="/ 13"
+                    valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
+                  />
+                </Card>
+                <Card variant="paper" className="text-center">
+                  <EditOutlined className="text-tenghuang text-2xl mb-2" />
+                  <Statistic
+                    title="批注数量"
+                    value={stats.annotations_count}
+                    valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
+                  />
+                </Card>
+                <Card variant="paper" className="text-center">
+                  <TrophyOutlined className="text-zhuqing text-2xl mb-2" />
+                  <Statistic
+                    title="读书卡数"
+                    value={materials?.reading_cards?.length || 0}
+                    valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
+                  />
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                  <LiteracyRadar data={literacyRadar} />
+                </Card>
+                <Card className="flex flex-col">
+                <Title level={5} className="!mb-4 flex items-center gap-2">
+                  <TrophyOutlined className="text-zhusha" />
+                  综合得分
+                </Title>
+                <div className="text-center py-6">
+                  <div className="text-6xl font-bold text-zhusha mb-2">
+                    {literacyRadar.overall_score}
+                  </div>
+                  <Text className="text-danmo block mb-1">/ 100</Text>
+                  <Text className="text-mohei text-lg font-medium">{literacyRadar.level_text}</Text>
+                </div>
+                {literacyRadar.summary_text && (
+                  <div className="mt-4 pt-4 border-t border-danmo-light">
+                    <Title level={5} className="!mb-2 text-sm flex items-center gap-2">
+                      <FileTextOutlined className="text-shiqing" />
+                      成长建议
+                    </Title>
+                    <Text className="text-mohei text-sm">{literacyRadar.summary_text}</Text>
+                  </div>
+                )}
+                <div className="mt-auto pt-4 flex items-center gap-3 text-xs text-danmo">
+                  <span>更新于 {new Date(literacyRadar.generated_at).toLocaleString('zh-CN', { timeZone: 'UTC' })} (UTC)</span>
+                  <Button size="small" icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
+                </div>
+              </Card>
+            </div>
+            </div>
+          )}
+        </TabPane>
+
         {/* Materials Tab */}
         <TabPane tab={<span><FileTextOutlined /> 学习素材</span>} key="materials">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Stats Cards */}
-            <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card variant="paper" className="text-center">
-                <ClockCircleOutlined className="text-shiqing text-2xl mb-2" />
-                <Statistic
-                  title="总阅读时长"
-                  value={`${Math.floor(stats.total_reading_time / 60)}h`}
-                  valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
-                />
-              </Card>
-              <Card variant="paper" className="text-center">
-                <BookOutlined className="text-zhusha text-2xl mb-2" />
-                <Statistic
-                  title="完成章节"
-                  value={stats.chapters_completed}
-                  suffix="/ 13"
-                  valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
-                />
-              </Card>
-              <Card variant="paper" className="text-center">
-                <EditOutlined className="text-tenghuang text-2xl mb-2" />
-                <Statistic
-                  title="批注数量"
-                  value={stats.annotations_count}
-                  valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
-                />
-              </Card>
-              <Card variant="paper" className="text-center">
-                <TrophyOutlined className="text-zhuqing text-2xl mb-2" />
-                <Statistic
-                  title="读书卡数"
-                  value={materials?.reading_cards?.length || 0}
-                  valueStyle={{ color: '#1A1A1A', fontSize: '24px' }}
-                />
-              </Card>
-            </div>
-
             {/* Annotations */}
             <AntCard title="我的批注" className="lg:col-span-2">
               {materials?.annotations?.length === 0 ? (
                 <Empty description="暂无批注" />
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {materials?.annotations?.map((a) => (
-                    <Card key={a.id} variant="paper">
-                      <div className="flex items-start gap-3">
-                        <StarOutlined className="text-tenghuang text-lg mt-0.5" />
-                        <div className="flex-1">
-                          <Tag color="blue">{a.annotation_type}</Tag>
-                          <Text className="text-sm text-mohei block mt-1 line-clamp-2">{a.content}</Text>
-                          <Text className="text-xs text-danmo mt-1 block">
-                            {new Date(a.created_at).toLocaleDateString()}
-                          </Text>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-2">
+                  {materials?.annotations?.map((anno) => (
+                    <Card key={anno.id} variant="paper" className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag color={
+                          anno.annotation_type === 'insight' ? 'green' :
+                          anno.annotation_type === 'question' ? 'orange' :
+                          anno.annotation_type === 'connection' ? 'purple' : 'blue'
+                        }>
+                          {anno.annotation_type === 'insight' ? '洞察' :
+                           anno.annotation_type === 'question' ? '提问' :
+                           anno.annotation_type === 'connection' ? '关联' : '标记'}
+                        </Tag>
+                        <Text className="text-xs text-danmo">第{anno.chapter_id}章</Text>
                       </div>
+                      <Text className="text-sm text-mohei line-clamp-2">{anno.content}</Text>
+                      <Text className="text-xs text-danmo block mt-2">{new Date(anno.created_at).toLocaleDateString()}</Text>
                     </Card>
                   ))}
                 </div>
@@ -378,7 +327,7 @@ const Profile: React.FC = () => {
               {materials?.reading_cards?.length === 0 ? (
                 <Empty description="暂无读书卡" />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
                   {materials?.reading_cards?.map((card) => (
                     <Card key={card.id} variant="paper" className="p-3">
                       <div className="flex items-center gap-2 mb-1">
@@ -402,7 +351,7 @@ const Profile: React.FC = () => {
               {materials?.works?.length === 0 ? (
                 <Empty description="暂无作品" />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
                   {materials?.works?.map((work) => (
                     <Card key={work.id} variant="paper" className="p-3">
                       <div className="flex items-start gap-3">
@@ -434,61 +383,6 @@ const Profile: React.FC = () => {
           <Card>
             <BadgeWall badges={badges} />
           </Card>
-        </TabPane>
-
-        {/* Evaluations Tab */}
-        <TabPane tab={<span><EditOutlined /> 评价档案</span>} key="evaluations">
-          <div className="space-y-6">
-            {evalFormTarget && (
-              <AntCard
-                title={
-                  evalFormTarget.type === 'sub'
-                    ? `填写${RUBRIC_NAMES[`sub_project_${evalFormTarget.id}`]?.title || '子项目'}评价`
-                    : `填写项目${evalFormTarget.id}评价`
-                }
-                extra={
-                  <Button type="link" onClick={() => setEvalFormTarget(null)}>
-                    取消
-                  </Button>
-                }
-              >
-                <EvaluationForm
-                  projectId={evalFormTarget.type === 'project' ? evalFormTarget.id : undefined}
-                  subProjectId={evalFormTarget.type === 'sub' ? evalFormTarget.id : undefined}
-                  onSaved={() => { setEvalFormTarget(null); fetchData() }}
-                />
-              </AntCard>
-            )}
-
-            <div className="flex gap-3 flex-wrap">
-              <Button icon={<PlusOutlined />} onClick={() => setEvalFormTarget({ type: 'sub', id: 1 })}>
-                填写典籍时间轴评价
-              </Button>
-              <Button icon={<PlusOutlined />} onClick={() => setEvalFormTarget({ type: 'sub', id: 4 })}>
-                填写经典思想论坛评价
-              </Button>
-              <Button icon={<PlusOutlined />} onClick={() => setEvalFormTarget({ type: 'sub', id: 8 })}>
-                填写经典声演评价
-              </Button>
-              <Button icon={<PlusOutlined />} onClick={() => setEvalFormTarget({ type: 'sub', id: 9 })}>
-                填写典籍长视频剪辑评价
-              </Button>
-            </div>
-
-            {(() => {
-              const visibleEvaluations = evaluations.filter(e => !['project1', 'project2', 'project3'].includes(e.form_type))
-              if (visibleEvaluations.length === 0) {
-                return <Empty description="暂无评价记录" />
-              }
-              return (
-                <div className="space-y-4">
-                  {visibleEvaluations.map((e) => (
-                    <EvaluationRecordCard key={e.id} evaluation={e} />
-                  ))}
-                </div>
-              )
-            })()}
-          </div>
         </TabPane>
 
         {/* Stats Tab */}

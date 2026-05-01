@@ -12,6 +12,8 @@ from app.services import badge_service
 from app.schemas.learning import (
     ForumTopicResponse,
     ForumTopicListResponse,
+    ForumTopicCreate,
+    ForumTopicUpdate,
     ForumPostCreate,
     ForumPostResponse,
     ForumPostWithUserResponse,
@@ -40,10 +42,116 @@ def list_topics(
             description=topic.description,
             status=topic.status,
             post_count=post_count,
+            created_by=topic.created_by,
+            is_system=bool(topic.is_system),
             created_at=topic.created_at
         ))
 
     return result
+
+
+@router.post("/topics", response_model=ForumTopicResponse, status_code=status.HTTP_201_CREATED)
+def create_topic(
+    topic_create: ForumTopicCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new discussion topic. Any logged-in user can create."""
+    title = topic_create.title.strip()
+    if not title:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Title is required"
+        )
+    if len(title) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Title must be 500 characters or fewer"
+        )
+
+    db_topic = ForumTopic(
+        title=title,
+        description=(topic_create.description or "").strip() or None,
+        status=TopicStatus.active,
+        created_by=current_user.id,
+    )
+    db.add(db_topic)
+    db.commit()
+    db.refresh(db_topic)
+
+    return db_topic
+
+
+@router.patch("/topics/{topic_id}", response_model=ForumTopicResponse)
+def update_topic(
+    topic_id: int,
+    topic_update: ForumTopicUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a topic's status. Only the creator can close their own topic."""
+    topic = db.query(ForumTopic).filter(ForumTopic.id == topic_id).first()
+    if not topic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Topic not found"
+        )
+
+    if topic.is_system:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="System topics cannot be modified"
+        )
+
+    if topic.created_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the topic creator can modify this topic"
+        )
+
+    if topic_update.status is not None:
+        # Creators may close or reopen, but cannot use this endpoint to delete.
+        if topic_update.status == TopicStatus.deleted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Use DELETE to remove a topic"
+            )
+        topic.status = topic_update.status
+
+    db.commit()
+    db.refresh(topic)
+    return topic
+
+
+@router.delete("/topics/{topic_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_topic(
+    topic_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Soft-delete a topic. Only the creator can delete their own topic."""
+    topic = db.query(ForumTopic).filter(ForumTopic.id == topic_id).first()
+    if not topic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Topic not found"
+        )
+
+    if topic.is_system:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="System topics cannot be deleted"
+        )
+
+    if topic.created_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the topic creator can delete this topic"
+        )
+
+    topic.status = TopicStatus.deleted
+    db.commit()
+    return None
 
 
 @router.post("/topics/{topic_id}/posts", response_model=ForumPostResponse, status_code=status.HTTP_201_CREATED)

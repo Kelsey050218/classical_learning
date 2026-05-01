@@ -352,6 +352,11 @@ const Exhibition: React.FC = () => {
                     <Title level={5} className="font-display !mb-2 line-clamp-1 group-hover:text-zhusha transition-colors">
                       {work.title}
                     </Title>
+                    {work.user_real_name && (
+                      <Text className="text-shiqing text-sm block mb-2 font-medium">
+                        {work.user_real_name}
+                      </Text>
+                    )}
                     {work.description && (
                       <Text className="text-danmo text-sm block mb-4 line-clamp-2 leading-relaxed">
                         {work.description}
@@ -443,6 +448,11 @@ const Exhibition: React.FC = () => {
                   <span className="font-medium">{selectedWork.like_count}</span>
                 </button>
               </div>
+              {selectedWork.user_real_name && (
+                <Text className="text-shiqing text-base mt-2 block font-medium">
+                  {selectedWork.user_real_name}
+                </Text>
+              )}
             </div>
 
             {/* Description */}
