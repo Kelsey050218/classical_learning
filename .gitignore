@@ -45,3 +45,6 @@ build/
 uploads/
 temp/
 tmp/
+
+# Documentation / data files
+docs/
