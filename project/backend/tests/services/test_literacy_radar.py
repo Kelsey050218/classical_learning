@@ -1,8 +1,11 @@
+import re
+from app.models.evaluation import Evaluation
 from app.services.literacy_radar import (
     DIMENSION_KEYS,
     DIMENSION_LABELS,
     STANDARD_TO_DIMENSION,
     BEHAVIOR_NORMALIZERS,
+    _compute_self_scores,
 )
 
 
@@ -37,3 +40,50 @@ def test_standard_tags_map_to_valid_dimensions():
 def test_behavior_normalizers_positive():
     for key, value in BEHAVIOR_NORMALIZERS.items():
         assert value > 0, f"normalizer {key} must be positive"
+
+
+def test_self_scores_empty_when_no_evaluations(db_session, test_user):
+    result = _compute_self_scores(test_user.id, db_session)
+    for dim in DIMENSION_KEYS:
+        assert result[dim] is None
+
+
+def test_self_scores_average_and_normalize(db_session, test_user):
+    eval_record = Evaluation(
+        user_id=test_user.id,
+        project_id=1,
+        form_type="sub_project_1",
+        scores={
+            "5.2基础性阅读知识_0": 5,   # 满分 → 100
+            "5.2基础性阅读知识_1": 3,   # 中分 → 50
+            "6.2理解性阅读能力_0": 4,   # → 75
+        },
+    )
+    db_session.add(eval_record)
+    db_session.commit()
+
+    result = _compute_self_scores(test_user.id, db_session)
+    # 5.2 两条均值 4 → (4-1)/4*100 = 75
+    assert result["basic_knowledge"] == 75.0
+    # 6.2 一条 4 → 75
+    assert result["comprehension"] == 75.0
+    # 其他维度无数据
+    assert result["strategic_knowledge"] is None
+    assert result["belief_value"] is None
+
+
+def test_self_scores_handle_unknown_keys_safely(db_session, test_user):
+    eval_record = Evaluation(
+        user_id=test_user.id,
+        project_id=1,
+        form_type="sub_project_1",
+        scores={
+            "未知字段": 4,
+            "5.2基础性阅读知识_0": 5,
+        },
+    )
+    db_session.add(eval_record)
+    db_session.commit()
+
+    result = _compute_self_scores(test_user.id, db_session)
+    assert result["basic_knowledge"] == 100.0

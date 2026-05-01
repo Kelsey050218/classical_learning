@@ -52,6 +52,50 @@ STANDARD_TO_DIMENSION: dict[str, str] = {
     "7.4观念性阅读价值": "belief_value",
 }
 
+import re
+from sqlalchemy.orm import Session
+
+from app.models.evaluation import Evaluation
+
+
+_SCORE_KEY_PATTERN = re.compile(r"^(.+?)_(\d+)$")
+
+
+def _compute_self_scores(user_id: int, db: Session) -> dict[str, Optional[float]]:
+    """对每个维度，从 evaluations.scores 中取相关条目均值并归一化到 0-100。
+
+    Evaluation.scores 的 key 形如 "5.2基础性阅读知识_0"，值是 1-5。
+    某维度无任何条目时返回 None。
+    """
+    bucket: dict[str, list[float]] = {key: [] for key in DIMENSION_KEYS}
+
+    rows = db.query(Evaluation).filter(Evaluation.user_id == user_id).all()
+    for row in rows:
+        scores = row.scores or {}
+        for raw_key, raw_value in scores.items():
+            match = _SCORE_KEY_PATTERN.match(raw_key)
+            standard = match.group(1) if match else raw_key
+            dim = STANDARD_TO_DIMENSION.get(standard)
+            if dim is None:
+                continue
+            try:
+                numeric = float(raw_value)
+            except (TypeError, ValueError):
+                continue
+            bucket[dim].append(numeric)
+
+    result: dict[str, Optional[float]] = {}
+    for key in DIMENSION_KEYS:
+        values = bucket[key]
+        if not values:
+            result[key] = None
+            continue
+        avg_1_to_5 = sum(values) / len(values)
+        # 线性归一化 1-5 → 0-100
+        result[key] = round((avg_1_to_5 - 1) / 4 * 100, 2)
+    return result
+
+
 # 行为信号归一化分母（按学情可调）
 BEHAVIOR_NORMALIZERS: dict[str, float] = {
     "annotations":               50,    # 批注总条数
