@@ -180,3 +180,126 @@ def test_behavior_scores_none_when_dimension_signals_all_zero(db_session, test_u
     assert result["comprehension"] is not None
     assert result["belief_value"] is None
     assert result["practice_value"] is None
+
+from app.services.literacy_radar import compute_radar
+
+
+def test_compute_radar_empty_state(db_session, test_user):
+    """场景一：纯空白用户 → overall_score 为 None，summary 为 None。"""
+    payload = compute_radar(test_user.id, db_session)
+    assert payload["overall_score"] is None
+    assert payload["level_text"] is None
+    assert payload["summary_text"] is None
+    assert len(payload["dimensions"]) == 8
+    for dim in payload["dimensions"]:
+        assert dim["score"] is None
+
+
+def test_compute_radar_only_self_eval(db_session, test_user):
+    """场景二：仅有自评数据 → 维度分等于 self_score。
+
+    注意：添加 Evaluation 记录会同时使 evaluations_filled=1，
+    从而触发 belief_value 的行为信号（约 12.5）。
+    因此 belief_value 的 score 为 round(0.5*100 + 0.5*12.5)=56，
+    而非 None。这里只断言没有 Evaluation 关联的维度。
+    """
+    db_session.add(Evaluation(
+        user_id=test_user.id, project_id=1, form_type="sub_project_1",
+        scores={
+            "5.2基础性阅读知识_0": 5,
+            "6.2理解性阅读能力_0": 4,
+        },
+    ))
+    db_session.commit()
+    payload = compute_radar(test_user.id, db_session)
+    by_key = {d["key"]: d for d in payload["dimensions"]}
+    assert by_key["basic_knowledge"]["score"] == 100
+    assert by_key["basic_knowledge"]["self_score"] == 100.0
+    assert by_key["basic_knowledge"]["behavior_score"] is None
+    assert by_key["comprehension"]["score"] == 75
+    # 没有触发的维度仍为 None（不受 Evaluation 计数影响）
+    assert by_key["practice_value"]["score"] is None
+    assert payload["overall_score"] is not None
+
+
+def test_compute_radar_only_behavior(db_session, test_user):
+    """场景三：仅有行为数据 → 维度分等于 behavior_score。"""
+    for cid in range(1, 7):
+        db_session.add(ReadingProgress(
+            user_id=test_user.id, chapter_id=cid, is_completed=True
+        ))
+    db_session.commit()
+    payload = compute_radar(test_user.id, db_session)
+    by_key = {d["key"]: d for d in payload["dimensions"]}
+    assert by_key["comprehension"]["self_score"] is None
+    assert by_key["comprehension"]["behavior_score"] is not None
+    assert by_key["comprehension"]["score"] == round(by_key["comprehension"]["behavior_score"])
+
+
+def test_compute_radar_mixed_uses_average(db_session, test_user):
+    """场景四：自评 + 行为皆有 → 维度分 = round(0.5 × self + 0.5 × behavior)。"""
+    db_session.add(Evaluation(
+        user_id=test_user.id, project_id=1, form_type="sub_project_1",
+        scores={"6.2理解性阅读能力_0": 5},  # self → 100
+    ))
+    for cid in range(1, 7):
+        db_session.add(ReadingProgress(
+            user_id=test_user.id, chapter_id=cid, is_completed=True
+        ))
+    db_session.commit()
+    payload = compute_radar(test_user.id, db_session)
+    by_key = {d["key"]: d for d in payload["dimensions"]}
+    expected = round(0.5 * 100 + 0.5 * by_key["comprehension"]["behavior_score"])
+    assert by_key["comprehension"]["score"] == expected
+
+
+def test_compute_radar_level_text_thresholds(db_session, test_user):
+    """level_text 按 overall_score 三档判定。
+
+    由于添加 Evaluation 会使 evaluations_filled=1，从而触发
+    belief_value 的行为信号（约 12.5），导致 belief_value 的
+    混合分约为 56，overall_score 会被拉低。
+    为避免行为数据干扰，额外补充足够行为数据让 belief_value
+    也达到 100，或直接用大量数据把所有行为分顶到 100。
+    这里选择补充论坛发帖 + 额外评价，使 belief_value 行为分
+    也达到 100，从而 overall_score == 100。
+    """
+    scores = {f"{tag}_0": 5 for tag in STANDARD_TO_DIMENSION.keys()}
+    db_session.add(Evaluation(
+        user_id=test_user.id, project_id=1, form_type="sub_project_1",
+        scores=scores,
+    ))
+    # 再填 3 份评价，使 evaluations_filled = 4（归一化分母）
+    for i in range(3):
+        db_session.add(Evaluation(
+            user_id=test_user.id, project_id=1,
+            form_type=f"sub_project_{i+2}", scores={},
+        ))
+    # 再发 5 个论坛帖，使 forum_posts = 5（归一化分母）
+    topic = ForumTopic(title="测试议题", created_by=test_user.id)
+    db_session.add(topic)
+    db_session.commit()
+    for i in range(5):
+        db_session.add(ForumPost(
+            topic_id=topic.id, user_id=test_user.id, content=f"观点{i}",
+        ))
+    db_session.commit()
+    payload = compute_radar(test_user.id, db_session)
+    assert payload["overall_score"] == 100
+    assert "三阶" in payload["level_text"]
+
+
+def test_compute_radar_summary_mentions_extremes(db_session, test_user):
+    """summary 应能在维度差异显著时同时提到亮点和短板。"""
+    db_session.add(Evaluation(
+        user_id=test_user.id, project_id=1, form_type="sub_project_1",
+        scores={
+            "5.2基础性阅读知识_0": 5,   # 100 → 亮点
+            "6.2理解性阅读能力_0": 1,   # 0 → 短板
+        },
+    ))
+    db_session.commit()
+    payload = compute_radar(test_user.id, db_session)
+    assert payload["summary_text"] is not None
+    assert "基础性阅读知识" in payload["summary_text"]
+    assert "理解性阅读能力" in payload["summary_text"]

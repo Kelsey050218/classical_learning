@@ -5,7 +5,7 @@
 """
 
 import re
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from typing import Optional
 
 from sqlalchemy import func
@@ -247,3 +247,72 @@ def _compute_behavior_scores(user_id: int, db: Session) -> dict[str, Optional[fl
         normalized = [_normalize(raw, denom) for raw, denom in signals]
         result[key] = round(sum(normalized) / len(normalized), 2)
     return result
+
+
+def _compose_dimension_score(
+    self_score: Optional[float],
+    behavior_score: Optional[float],
+) -> Optional[int]:
+    if self_score is not None and behavior_score is not None:
+        return round(0.5 * self_score + 0.5 * behavior_score)
+    if self_score is not None:
+        return round(self_score)
+    if behavior_score is not None:
+        return round(behavior_score)
+    return None
+
+
+def _level_text_for(overall: Optional[int]) -> Optional[str]:
+    if overall is None:
+        return None
+    if overall < 50:
+        return "一阶 · 奠基期"
+    if overall < 80:
+        return "二阶 · 拓展期"
+    return "三阶 · 深化期"
+
+
+def _compose_summary(dimensions: list[dict]) -> Optional[str]:
+    """两句以内：报亮点；差值显著时报短板。"""
+    scored = [d for d in dimensions if d["score"] is not None]
+    if not scored:
+        return None
+    high = max(scored, key=lambda d: d["score"])
+    low = min(scored, key=lambda d: d["score"])
+
+    sentences = [f"你的「{high['label']}」表现最亮，已达 {high['score']} 分，继续保持。"]
+    if high["key"] != low["key"] and (high["score"] - low["score"]) >= 5:
+        sentences.append(f"建议多在「{low['label']}」上发力，当前 {low['score']} 分，可通过相关学习活动提升。")
+    return "".join(sentences)
+
+
+def compute_radar(user_id: int, db: Session) -> dict:
+    """雷达图聚合入口。返回符合 RadarPayload 结构的字典。"""
+    self_scores = _compute_self_scores(user_id, db)
+    behavior_scores = _compute_behavior_scores(user_id, db)
+
+    dimensions: list[dict] = []
+    for key in DIMENSION_KEYS:
+        s_val = self_scores[key]
+        b_val = behavior_scores[key]
+        score = _compose_dimension_score(s_val, b_val)
+        dimensions.append({
+            "key": key,
+            "framework_code": DIMENSION_FRAMEWORK_CODES[key],
+            "label": DIMENSION_LABELS[key],
+            "score": score,
+            "self_score": s_val,
+            "behavior_score": b_val,
+            "highlights": [],
+        })
+
+    valid_scores = [d["score"] for d in dimensions if d["score"] is not None]
+    overall = round(sum(valid_scores) / len(valid_scores)) if valid_scores else None
+
+    return {
+        "level_text": _level_text_for(overall),
+        "overall_score": overall,
+        "dimensions": dimensions,
+        "summary_text": _compose_summary(dimensions),
+        "generated_at": datetime.utcnow(),
+    }
