@@ -1,16 +1,35 @@
+# 《经典常谈》后端 systemd 服务配置
+# 注意: 当前服务器使用 nohup 方式运行后端，此文件仅供参考
+# 如需使用 systemd 管理，执行以下步骤:
+#   sudo cp classics-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable classics-backend
+#   sudo systemctl start classics-backend
+
 [Unit]
-Description=Classics Learning Platform Backend
-After=network.target mysql.service
+Description=经典常谈伴学平台后端服务 (FastAPI + Uvicorn)
+After=network.target
+# 如果使用 Docker MySQL，取消下面这行的注释
+# Requires=docker.service
+# After=docker.service
 
 [Service]
-Type=exec
-User=www-data
-WorkingDirectory=/var/www/classics-learning/backend
-Environment=PATH=/var/www/classics-learning/backend/venv/bin
-EnvironmentFile=/var/www/classics-learning/backend/.env
-ExecStart=/var/www/classics-learning/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 4
+Type=notify
+User=root
+WorkingDirectory=/root/classical_learning/project/backend
+Environment="PATH=/root/classical_learning/project/backend/venv/bin"
+EnvironmentFile=/root/classical_learning/project/backend/.env
+ExecStart=/root/classical_learning/project/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
+StandardOutput=append:/root/classical_learning/project/backend/backend.log
+StandardError=append:/root/classical_learning/project/backend/backend.log
+
+# 安全加固 (可选)
+# NoNewPrivileges=true
+# ProtectSystem=strict
+# ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target

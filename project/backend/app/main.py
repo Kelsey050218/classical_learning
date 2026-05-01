@@ -36,8 +36,8 @@ from app.models.work_comment import WorkComment  # Import to ensure table is cre
 from app.models.vote_settings import VoteSettings  # Import to ensure table is created
 from app.models.notification import Notification  # Import to ensure table is created
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Create database tables (disabled to avoid DDL conflicts)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="经典常谈伴学平台", version="1.0.0")
 

@@ -1,290 +1,228 @@
-# 《经典常谈》伴学平台 - 部署指南
+# 《经典常谈》伴学平台 - 启动指南
 
-## 系统要求
+> 本文档说明如何在服务器上启动前后端服务。
 
-### 服务器配置
-- **操作系统**: Ubuntu 22.04 LTS
-- **内存**: 至少 2GB RAM
-- **磁盘**: 至少 20GB 可用空间
+## 环境概况
 
-### 软件依赖
-- **MySQL**: 8.0+
-- **Nginx**: 1.18+
-- **Node.js**: 18.x+
-- **Python**: 3.10+
-- **Git**: 2.x+
+当前服务器已安装的基础服务：
+- **MySQL**: Docker 容器运行中 (端口 3306, 数据库 `classics_learning`)
+- **Nginx**: 系统服务运行中 (端口 80)
+- **Python**: 3.8.10 (后端 venv 已配置)
+- **Node.js**: v20.x (通过 nvm 管理)
 
-## 安装步骤
+## 快速启动
 
-### 1. 系统更新与基础安装
+### 1. 启动后端
 
 ```bash
-# 更新系统
-sudo apt update && sudo apt upgrade -y
-
-# 安装基础工具
-sudo apt install -y curl wget git nginx
-
-# 安装 Python 3.10 和 pip
-sudo apt install -y python3.10 python3.10-venv python3-pip
-
-# 安装 Node.js 18.x
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# 验证安装
-python3 --version  # Python 3.10.x
-node --version     # v18.x.x
-npm --version      # 9.x.x
-```
-
-### 2. MySQL 安装与配置
-
-```bash
-# 安装 MySQL
-sudo apt install -y mysql-server
-
-# 安全配置
-sudo mysql_secure_installation
-
-# 创建数据库和用户
-sudo mysql -u root -p
-```
-
-在 MySQL 中执行:
-```sql
-CREATE DATABASE classics_learning CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'classics_user'@'localhost' IDENTIFIED BY 'YOUR_SECURE_PASSWORD';
-GRANT ALL PRIVILEGES ON classics_learning.* TO 'classics_user'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-### 3. 项目部署
-
-```bash
-# 创建项目目录
-sudo mkdir -p /var/www/classics-learning
-sudo chown -R $USER:$USER /var/www/classics-learning
-
-# 克隆代码
-cd /var/www/classics-learning
-git clone https://github.com/your-username/classics-learning.git .
-
-# 复制环境变量文件
-cd project/backend
-cp .env.example .env
-# 编辑 .env 文件，配置数据库和其他参数
-nano .env
-
-cd ../frontend
-cp .env.example .env
-```
-
-### 4. 后端环境配置
-
-编辑 `backend/.env`:
-
-```env
-# Database
-DATABASE_URL=mysql+pymysql://classics_user:YOUR_PASSWORD@localhost:3306/classics_learning?charset=utf8mb4
-
-# Security
-SECRET_KEY=$(openssl rand -hex 32)
-
-# Frontend URL (for CORS)
-FRONTEND_URL=http://your-domain.com
-
-# Aliyun OSS
-OSS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
-OSS_ACCESS_KEY_SECRET=YOUR_ACCESS_KEY_SECRET
-OSS_BUCKET_NAME=your-bucket-name
-OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
-
-# Environment
-ENVIRONMENT=production
-```
-
-```bash
-# 创建虚拟环境并安装依赖
-cd /var/www/classics-learning/project/backend
-python3 -m venv venv
+cd /root/classical_learning/project/backend
 source venv/bin/activate
-pip install -r requirements.txt
-
-# 运行数据库迁移
-alembic upgrade head
-
-deactivate
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 > backend.log 2>&1 &
 ```
 
-### 5. 前端构建
+验证后端是否启动成功：
+```bash
+curl http://localhost:8000/health
+# 应返回: {"status":"ok","message":"经典常谈伴学平台运行正常"}
+
+curl http://localhost:8000/docs
+# 应显示 FastAPI 自动生成的 API 文档页面
+```
+
+查看后端日志：
+```bash
+tail -f /root/classical_learning/project/backend/backend.log
+```
+
+### 2. 构建并部署前端
 
 ```bash
-cd /var/www/classics-learning/project/frontend
+cd /root/classical_learning/project/frontend
 npm install
 npm run build
 ```
 
-### 6. Nginx 配置
-
+构建完成后，将产物复制到 Nginx 目录：
 ```bash
-# 复制 Nginx 配置
-sudo cp /var/www/classics-learning/project/nginx.conf /etc/nginx/sites-available/classics-learning
-
-# 启用站点
-sudo ln -sf /etc/nginx/sites-available/classics-learning /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-
-# 测试配置
-sudo nginx -t
-
-# 重启 Nginx
-sudo systemctl restart nginx
-```
-
-### 7. Systemd 服务配置
-
-```bash
-# 复制服务文件
-sudo cp /var/www/classics-learning/project/classics-backend.service /etc/systemd/system/
-
-# 重新加载 systemd
-sudo systemctl daemon-reload
-
-# 启用服务
-sudo systemctl enable classics-backend
-
-# 启动服务
-sudo systemctl start classics-backend
-
-# 查看状态
-sudo systemctl status classics-backend
-```
-
-### 8. 目录权限设置
-
-```bash
-# 创建前端部署目录
 sudo mkdir -p /var/www/classics-learning/frontend/dist
-
-# 复制前端构建文件
-sudo cp -r /var/www/classics-learning/project/frontend/dist/* /var/www/classics-learning/frontend/dist/
-
-# 设置权限
+sudo cp -r dist/* /var/www/classics-learning/frontend/dist/
 sudo chown -R www-data:www-data /var/www/classics-learning/frontend/dist
-sudo chmod -R 755 /var/www/classics-learning/frontend/dist
 ```
 
-## SSL 证书配置 (Let's Encrypt)
-
+重载 Nginx：
 ```bash
-# 安装 Certbot
-sudo apt install -y certbot python3-certbot-nginx
-
-# 申请证书
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
-
-# 自动续期测试
-sudo certbot renew --dry-run
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-申请证书后，Certbot 会自动修改 Nginx 配置添加 HTTPS 支持。
-
-## 自动部署
-
-使用提供的部署脚本:
-
+验证前端：
 ```bash
-cd /var/www/classics-learning/project
-./deploy.sh
+curl -I http://localhost/
+# 应返回 HTTP/1.1 200 OK
 ```
 
-## 常用命令
+## 完整启动流程（从零开始）
 
-### 服务管理
+如果服务器刚重置或首次部署，按以下顺序操作：
+
+### 前置条件检查
 
 ```bash
-# 后端服务
-sudo systemctl start classics-backend
-sudo systemctl stop classics-backend
-sudo systemctl restart classics-backend
-sudo systemctl status classics-backend
+# 检查 MySQL 是否运行
+docker ps | grep mysql
 
-# Nginx
-sudo systemctl start nginx
-sudo systemctl stop nginx
-sudo systemctl restart nginx
-sudo systemctl reload nginx
+# 检查 Nginx 是否运行
+systemctl status nginx
 
-# MySQL
-sudo systemctl start mysql
-sudo systemctl stop mysql
-sudo systemctl restart mysql
+# 检查 Python venv
+cd /root/classical_learning/project/backend
+source venv/bin/activate
+pip list | grep fastapi
+
+# 检查 Node.js
+node --version
 ```
 
-### 日志查看
+### 配置环境变量
+
+后端 `.env` (已配置，无需修改)：
+```bash
+# 文件位置: /root/classical_learning/project/backend/.env
+DATABASE_URL=mysql+pymysql://root:REDACTED@localhost:3306/classics_learning?charset=utf8mb4
+SECRET_KEY=your-secret-key
+FRONTEND_URL=http://localhost:5173
+ENVIRONMENT=production
+```
+
+前端 `.env` (已配置，无需修改)：
+```bash
+# 文件位置: /root/classical_learning/project/frontend/.env
+VITE_API_BASE_URL=/api
+```
+
+### 启动后端
 
 ```bash
-# 后端日志
-sudo journalctl -u classics-backend -f
+cd /root/classical_learning/project/backend
+source venv/bin/activate
 
-# Nginx 日志
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+# 前台启动（调试用）
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# 或后台启动（生产用）
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 > backend.log 2>&1 &
+```
+
+### 构建前端
+
+```bash
+cd /root/classical_learning/project/frontend
+npm install
+npm run build
+
+# 部署到 Nginx
+sudo mkdir -p /var/www/classics-learning/frontend/dist
+sudo cp -r dist/* /var/www/classics-learning/frontend/dist/
+sudo chown -R www-data:www-data /var/www/classics-learning/frontend/dist
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## 日常运维
+
+### 重启后端
+
+```bash
+# 停止旧进程
+pkill -f "uvicorn app.main:app"
+
+# 启动新进程
+cd /root/classical_learning/project/backend
+source venv/bin/activate
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 > backend.log 2>&1 &
+```
+
+### 更新前端
+
+```bash
+cd /root/classical_learning/project/frontend
+npm run build
+sudo rm -rf /var/www/classics-learning/frontend/dist/*
+sudo cp -r dist/* /var/www/classics-learning/frontend/dist/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### 更新后端依赖
+
+```bash
+cd /root/classical_learning/project/backend
+source venv/bin/activate
+pip install -r requirements.txt
+# 然后重启后端
+```
+
+### 查看服务状态
+
+```bash
+# 检查后端进程
+ps aux | grep uvicorn
+
+# 检查后端健康
+curl http://localhost:8000/health
+
+# 检查前端
+curl -I http://localhost/
+
+# 检查 Nginx
+systemctl status nginx
+
+# 查看后端日志
+tail -100 /root/classical_learning/project/backend/backend.log
+```
+
+## Nginx 配置说明
+
+配置文件: `/etc/nginx/sites-available/classics-learning` (或 `/etc/nginx/conf.d/`)
+
+关键配置：
+- `/` → 前端静态文件 (`/var/www/classics-learning/frontend/dist`)
+- `/api` → 反向代理到 `http://localhost:8000` (后端)
+
+修改 Nginx 配置后记得测试并重载：
+```bash
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ## 故障排查
 
-### 后端无法启动
+### 后端启动失败
 
-1. 检查环境变量配置
-2. 检查数据库连接
-3. 查看 systemd 日志: `sudo journalctl -u classics-backend -n 100`
+1. 检查端口是否被占用: `lsof -i :8000`
+2. 检查数据库连接: `mysql -h 127.0.0.1 -P 3306 -u root -pREDACTED -e "SELECT 1"`
+3. 查看日志: `tail -50 backend.log`
+4. 检查 venv 依赖: `source venv/bin/activate && pip list`
 
-### 前端无法访问
+### 前端 404 或白屏
 
-1. 检查 Nginx 配置: `sudo nginx -t`
-2. 检查前端文件是否存在: `ls -la /var/www/classics-learning/frontend/dist`
-3. 查看 Nginx 错误日志
+1. 检查构建产物是否存在: `ls -la /var/www/classics-learning/frontend/dist/`
+2. 检查 Nginx 配置中的 root 路径是否正确
+3. 查看 Nginx 错误日志: `tail -50 /var/log/nginx/error.log`
+4. 检查浏览器控制台网络请求
+
+### API 请求 502 Bad Gateway
+
+1. 后端未启动: 按上方步骤启动后端
+2. 后端端口不匹配: 确认 Nginx proxy_pass 指向 `localhost:8000`
+3. 后端崩溃: 查看后端日志 `backend.log`
 
 ### 数据库连接失败
 
-1. 确认 MySQL 服务运行: `sudo systemctl status mysql`
-2. 检查数据库用户权限
-3. 验证数据库 URL 格式
+1. 检查 MySQL 容器: `docker ps | grep mysql`
+2. 检查 `.env` 中的数据库密码是否正确
+3. 测试连接: `mysql -h 127.0.0.1 -P 3306 -u root -pREDACTED`
 
-## 安全建议
+## 注意事项
 
-1. **定期更新系统**: `sudo apt update && sudo apt upgrade`
-2. **配置防火墙**:
-   ```bash
-   sudo ufw allow 'Nginx Full'
-   sudo ufw allow OpenSSH
-   sudo ufw enable
-   ```
-3. **定期备份数据库**
-4. **使用强密码**
-5. **配置 fail2ban 防止暴力破解**
-
-## 更新部署
-
-要更新代码并重新部署:
-
-```bash
-cd /var/www/classics-learning/project
-./deploy.sh
-```
-
-此脚本会自动:
-1. 拉取最新代码
-2. 更新后端依赖
-3. 运行数据库迁移
-4. 重启后端服务
-5. 构建前端
-6. 更新 Nginx 静态文件
-7. 重载 Nginx
-
-## 联系支持
-
-如有问题，请联系开发团队。
+- 后端使用 `0.0.0.0` 而非 `127.0.0.1` 绑定，以便 Nginx 反向代理访问
+- 前端构建后必须手动复制到 Nginx 目录，Vite 不会自动部署
+- `.env` 文件包含数据库密码等敏感信息，不要提交到 Git
+- OSS 功能当前未配置（已注释），文件上传使用本地存储
+- 后端 venv 路径: `/root/classical_learning/project/backend/venv`

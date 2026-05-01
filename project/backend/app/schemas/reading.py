@@ -50,7 +50,7 @@ class AnnotationCreate(BaseModel):
     position_end: int
     content: str
     annotation_type: str  # mark, question, connection, insight
-    mark_symbol: str | None = None  # circle, dot, underline, box (for mark type)
+    mark_symbol: Optional[str] = None  # circle, dot, underline, box (for mark type)
 
 
 class AnnotationResponse(BaseModel):
@@ -63,7 +63,7 @@ class AnnotationResponse(BaseModel):
     position_end: int
     content: str
     annotation_type: str
-    mark_symbol: str | None = None
+    mark_symbol: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
