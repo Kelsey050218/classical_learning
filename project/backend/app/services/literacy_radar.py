@@ -4,7 +4,23 @@
 混合 evaluations.scores 自评数据与系统行为数据，输出可视化所需的雷达 payload。
 """
 
+import re
+from datetime import date, timedelta
 from typing import Optional
+
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.models.evaluation import Evaluation
+from app.models.reading import ReadingProgress, Annotation
+from app.models.reading_card import ReadingCard
+from app.models.work import Work, WorkStatus
+from app.models.note import Note
+from app.models.checkin import CheckIn
+from app.models.study_time import StudyTimeLog
+from app.models.learning import ForumPost, ForumVote
+from app.models.quiz import Quiz, QuizAttempt
+from app.models.restoration import RestorationProgress, RestorationDiagnostic, RestorationNode
 
 
 DIMENSION_KEYS: list[str] = [
@@ -52,13 +68,24 @@ STANDARD_TO_DIMENSION: dict[str, str] = {
     "7.4观念性阅读价值": "belief_value",
 }
 
-import re
-from sqlalchemy.orm import Session
-
-from app.models.evaluation import Evaluation
-
-
 _SCORE_KEY_PATTERN = re.compile(r"^(.+?)_(\d+)$")
+
+
+# 行为信号归一化分母（按学情可调）
+BEHAVIOR_NORMALIZERS: dict[str, float] = {
+    "annotations":               50,    # 批注总条数
+    "card_template_coverage":    12,    # 12 类读书卡模板
+    "chapters_completed":        13,    # 13 章
+    "evaluation_card_count":     3,     # 评价鉴赏卡（模板 11）
+    "forum_votes":               20,    # 论坛获得的投票数
+    "works_published":           3,     # 已发布作品数
+    "creative_card_count":       6,     # 感悟/写作借鉴/总结卡（9/10/12）总数
+    "study_time_30d_hours":      30,    # 近 30 天学习时长（小时）
+    "checkin_total_days":        30,    # 总打卡天数
+    "annotations_plus_notes":    30,    # 笔记 + 批注
+    "forum_posts":               5,     # 论坛贴文数
+    "evaluations_filled":        4,     # 已填评价表数
+}
 
 
 def _compute_self_scores(user_id: int, db: Session) -> dict[str, Optional[float]]:
@@ -96,18 +123,127 @@ def _compute_self_scores(user_id: int, db: Session) -> dict[str, Optional[float]
     return result
 
 
-# 行为信号归一化分母（按学情可调）
-BEHAVIOR_NORMALIZERS: dict[str, float] = {
-    "annotations":               50,    # 批注总条数
-    "card_template_coverage":    12,    # 12 类读书卡模板
-    "chapters_completed":        13,    # 13 章
-    "evaluation_card_count":     3,     # 评价鉴赏卡（模板 11）
-    "forum_votes":               20,    # 论坛获得的投票数
-    "works_published":           3,     # 已发布作品数
-    "creative_card_count":       6,     # 感悟/写作借鉴/总结卡（9/10/12）总数
-    "study_time_30d_hours":      30,    # 近 30 天学习时长（小时）
-    "checkin_total_days":        30,    # 总打卡天数
-    "annotations_plus_notes":    30,    # 笔记 + 批注
-    "forum_posts":               5,     # 论坛贴文数
-    "evaluations_filled":        4,     # 已填评价表数
-}
+def _normalize(raw: float, denom: float) -> float:
+    """线性截断归一化到 [0, 100]。"""
+    if denom <= 0:
+        return 0.0
+    return max(0.0, min(100.0, raw / denom * 100))
+
+
+def _compute_behavior_scores(user_id: int, db: Session) -> dict[str, Optional[float]]:
+    """每维行为信号归一化均值；维度内全部信号为 0 时维度值为 None。"""
+    # ----- 收集原始计数 -----
+    annotations = db.query(func.count(Annotation.id)).filter(
+        Annotation.user_id == user_id
+    ).scalar() or 0
+
+    notes = db.query(func.count(Note.id)).filter(
+        Note.user_id == user_id
+    ).scalar() or 0
+
+    cards = db.query(ReadingCard).filter(ReadingCard.user_id == user_id).all()
+    template_coverage = len({c.card_template for c in cards})
+    eval_card_count = sum(1 for c in cards if c.card_template == 11)
+    creative_card_count = sum(1 for c in cards if c.card_template in {9, 10, 12})
+
+    chapters_completed = db.query(func.count(ReadingProgress.id)).filter(
+        ReadingProgress.user_id == user_id,
+        ReadingProgress.is_completed == True,
+    ).scalar() or 0
+
+    works_published = db.query(func.count(Work.id)).filter(
+        Work.user_id == user_id,
+        Work.status == WorkStatus.published,
+    ).scalar() or 0
+
+    thirty_days_ago = date.today() - timedelta(days=30)
+    study_seconds_30d = db.query(func.coalesce(func.sum(StudyTimeLog.duration_seconds), 0)).filter(
+        StudyTimeLog.user_id == user_id,
+        StudyTimeLog.session_date >= thirty_days_ago,
+    ).scalar() or 0
+    study_hours_30d = study_seconds_30d / 3600.0
+
+    checkin_total = db.query(func.count(CheckIn.id)).filter(
+        CheckIn.user_id == user_id
+    ).scalar() or 0
+
+    forum_posts = db.query(func.count(ForumPost.id)).filter(
+        ForumPost.user_id == user_id
+    ).scalar() or 0
+
+    forum_vote_count = db.query(func.count(ForumVote.id)).join(
+        ForumPost, ForumPost.id == ForumVote.post_id
+    ).filter(ForumPost.user_id == user_id).scalar() or 0
+
+    evaluations_filled = db.query(func.count(Evaluation.id)).filter(
+        Evaluation.user_id == user_id
+    ).scalar() or 0
+
+    # 测验通过率
+    quiz_total = db.query(func.count(Quiz.id)).scalar() or 0
+    quiz_passed = db.query(func.count(QuizAttempt.id)).filter(
+        QuizAttempt.user_id == user_id,
+        QuizAttempt.is_passed == True,
+    ).scalar() or 0
+    quiz_pass_rate = (quiz_passed / quiz_total) if quiz_total > 0 else 0.0
+
+    # 复原诊断/排序正确率
+    diag_total = db.query(func.count(RestorationDiagnostic.id)).scalar() or 0
+    sort_total = db.query(func.count(RestorationNode.id)).scalar() or 0
+    diag_correct_sum = db.query(func.coalesce(func.sum(RestorationProgress.diagnostic_correct), 0)).filter(
+        RestorationProgress.user_id == user_id
+    ).scalar() or 0
+    sort_correct_sum = db.query(func.coalesce(func.sum(RestorationProgress.sorting_correct), 0)).filter(
+        RestorationProgress.user_id == user_id
+    ).scalar() or 0
+    diag_rate = (diag_correct_sum / diag_total) if diag_total > 0 else 0.0
+    sort_rate = (sort_correct_sum / sort_total) if sort_total > 0 else 0.0
+
+    # ----- 每维原始 raw 列表（同时记录是否所有 raw 都为 0）-----
+    n = BEHAVIOR_NORMALIZERS
+
+    dim_signals: dict[str, list[tuple[float, float]]] = {
+        "basic_knowledge": [
+            (quiz_pass_rate * 100, 100),
+            (diag_rate * 100, 100),
+        ],
+        "strategic_knowledge": [
+            (annotations, n["annotations"]),
+            (template_coverage, n["card_template_coverage"]),
+        ],
+        "comprehension": [
+            (chapters_completed, n["chapters_completed"]),
+            (sort_rate * 100, 100),
+        ],
+        "evaluation": [
+            (eval_card_count, n["evaluation_card_count"]),
+            (forum_vote_count, n["forum_votes"]),
+        ],
+        "creation": [
+            (works_published, n["works_published"]),
+            (creative_card_count, n["creative_card_count"]),
+        ],
+        "emotional_value": [
+            (study_hours_30d, n["study_time_30d_hours"]),
+            (chapters_completed, n["chapters_completed"]),
+        ],
+        "practice_value": [
+            (checkin_total, n["checkin_total_days"]),
+            (annotations + notes, n["annotations_plus_notes"]),
+        ],
+        "belief_value": [
+            (forum_posts, n["forum_posts"]),
+            (evaluations_filled, n["evaluations_filled"]),
+        ],
+    }
+
+    result: dict[str, Optional[float]] = {}
+    for key in DIMENSION_KEYS:
+        signals = dim_signals[key]
+        raw_total = sum(raw for raw, _ in signals)
+        if raw_total <= 0:
+            result[key] = None
+            continue
+        normalized = [_normalize(raw, denom) for raw, denom in signals]
+        result[key] = round(sum(normalized) / len(normalized), 2)
+    return result
