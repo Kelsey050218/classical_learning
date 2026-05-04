@@ -187,8 +187,8 @@ SECRET_KEY=your-secret-key-here
 FRONTEND_URL=http://localhost:5173
 
 # 阿里云 OSS
-OSS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
-OSS_ACCESS_KEY_SECRET=YOUR_ACCESS_KEY_SECRET
+OSS_ACCESS_KEY_ID=your-access-key-id
+OSS_ACCESS_KEY_SECRET=your-access-key-secret
 OSS_BUCKET_NAME=your-bucket-name
 OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
 

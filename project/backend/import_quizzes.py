@@ -12,7 +12,7 @@ DB_CONFIG = {
     "host": "localhost",
     "port": 3306,
     "user": "classics_user",
-    "password": "REDACTED",
+    "password": "YOUR_PASSWORD",
     "database": "classics_learning",
     "charset": "utf8mb4",
 }

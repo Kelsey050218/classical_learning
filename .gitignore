@@ -1,50 +1,132 @@
-# OS
+# ============================================
+# 经典常谈伴学平台 - Git Ignore
+# 适用于 Public GitHub 仓库
+# ============================================
+
+# --------------------------------------------
+# OS 系统文件
+# --------------------------------------------
 .DS_Store
 Thumbs.db
+desktop.ini
+*.lnk
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# --------------------------------------------
+# IDE / 编辑器
+# --------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
 
-# Python
+# --------------------------------------------
+# Python (Backend)
+# --------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# 虚拟环境
 venv/
+.venv/
 env/
 ENV/
 
-# Node
+# 构建/分发
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+MANIFEST
+
+# 测试/覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+# Pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --------------------------------------------
+# Node.js (Frontend)
+# --------------------------------------------
 node_modules/
+.pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-store/
 
-# Build outputs
-dist/
-build/
+# Vite
+.vite/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# 前端构建产物
+/dist
+/build
 
-# Logs
+# --------------------------------------------
+# 环境变量与密钥 (绝不提交)
+# --------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# 保留示例文件
+!.env.example
+
+# 密钥/证书
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+id_rsa
+id_ed25519
+id_ecdsa
+.ssh/
+
+# --------------------------------------------
+# 日志文件
+# --------------------------------------------
 *.log
+logs/
+backend.log
+vite.log
 
-# Database
+# --------------------------------------------
+# 数据库文件
+# --------------------------------------------
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
 
-# Uploads / temp
+# Docker 数据卷
+mysql_data/
+
+# --------------------------------------------
+# 上传/临时文件
+# --------------------------------------------
 uploads/
 temp/
 tmp/
 
-# Documentation / data files
+# --------------------------------------------
+# 文档/数据 (如需要保留，请注释掉)
+# --------------------------------------------
 docs/

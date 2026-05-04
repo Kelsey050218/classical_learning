@@ -4,6 +4,8 @@
 混合 evaluations.scores 自评数据与系统行为数据，输出可视化所需的雷达 payload。
 """
 
+from __future__ import annotations
+
 import re
 from datetime import date, timedelta, datetime, timezone
 from typing import Optional
