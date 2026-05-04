@@ -127,6 +127,16 @@ temp/
 tmp/
 
 # --------------------------------------------
+# 部署配置与文档 (服务器相关，不适合公开)
+# --------------------------------------------
+.superpowers/
+project/docs/
+project/classics-backend.service
+project/deploy.sh
+project/docker-compose.yml
+project/nginx.conf
+
+# --------------------------------------------
 # 文档/数据 (如需要保留，请注释掉)
 # --------------------------------------------
 docs/
